@@ -299,7 +299,7 @@ export function ContributionsChart({ data, height = 220 }: { data: { month: stri
 }
 
 /** Loan balance over time from an amortisation schedule. */
-export function LoanBalanceChart({ data, height = 220 }: { data: { date: string; principal: number; interest: number; balance: number }[]; height?: number }) {
+export function LoanBalanceChart({ data, height = 220 }: { data: { date: string; balance: number }[]; height?: number }) {
   return (
     <Frame height={height} label="Loan balance over time">
       <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
