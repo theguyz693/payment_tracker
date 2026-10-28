@@ -1,144 +1,96 @@
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
 import Link from "next/link";
-import { ArrowIn, ArrowOut, ArrowRight, BarChart, Home, Repeat, Search } from "../icons";
-import { DashboardMockup, HeroVisual } from "./Mockups";
+import { Hero } from "./hero/Hero";
+import { InstrumentMark, RingsFallback } from "./hero/RingsFallback";
 import { LandingNav } from "./LandingNav";
+import { ProductPreview } from "./ProductPreview";
+import { ReceiptShowcase } from "./ReceiptShowcase";
 import { RevealObserver } from "./RevealObserver";
+import { CalendarScene } from "./scenes/CalendarScene";
+import { CashFlowScene } from "./scenes/CashFlowScene";
+import { GoalScene } from "./scenes/GoalScene";
+import { InvestScene } from "./scenes/InvestScene";
+import { btnGhost, btnPaper, d, display, eyebrow } from "./styles";
 
-const d = (n: number) => ({ "--d": n }) as React.CSSProperties;
+// Public landing page, "The Instrument": an always-dark, art-directed page
+// that sits apart from the app's own light/dark theme (tokens are re-scoped
+// under .landing in globals.css). Every figure on it is an illustrative sample.
 
 export function Landing() {
   return (
     <div className="landing relative overflow-x-clip">
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <LandingNav />
       <RevealObserver />
-      <main>
+      <main id="main">
         <Hero />
-        <Problem />
+        <Product />
+        <Receipt />
         <Features />
-        <HowItWorks />
-        <Showcase />
-        <FinalCta />
+        <Security />
+        <Closing />
       </main>
       <Footer />
     </div>
   );
 }
 
-function PrimaryCta({ children, large = false }: { children: React.ReactNode; large?: boolean }) {
+function SectionHead({ fig, title, children, id }: { fig: string; title: React.ReactNode; children?: React.ReactNode; id?: string }) {
   return (
-    <Link
-      href="/signup"
-      className={`press group inline-flex items-center justify-center gap-2 rounded-full bg-ink font-semibold text-on-ink shadow-[0_10px_24px_-10px_rgb(20_28_43/0.55)] hover:-translate-y-px hover:shadow-[0_14px_30px_-10px_rgb(20_28_43/0.55)] ${
-        large ? "h-14 px-8 text-base" : "h-12 px-6 text-[15px]"
-      }`}
-    >
-      {children}
-      <ArrowRight width={16} height={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-    </Link>
+    <div className="max-w-3xl">
+      <p data-reveal className={`${eyebrow} text-brass`}>
+        {fig}
+      </p>
+      <h2 id={id} data-reveal style={d(1)} className={`${display} mt-5 text-[clamp(2.6rem,6.2vw,5.4rem)]`}>
+        {title}
+      </h2>
+      {children && (
+        <p data-reveal style={d(2)} className="mt-6 max-w-xl text-lg leading-relaxed text-ink-2">
+          {children}
+        </p>
+      )}
+    </div>
   );
 }
 
-function SecondaryCta({ children }: { children: React.ReactNode }) {
-  return (
-    <Link
-      href="/login"
-      className="press inline-flex h-12 items-center justify-center rounded-full border border-line-strong bg-surface/70 px-6 text-[15px] font-semibold text-ink backdrop-blur hover:border-ink-3 hover:bg-surface"
-    >
-      {children}
-    </Link>
-  );
-}
+/* --------------------------------------------------------------- Product */
 
-/* ------------------------------------------------------------------ Hero */
-
-function Hero() {
+function Product() {
   return (
-    <section className="relative px-5 pt-32 pb-24 sm:px-8 sm:pt-40 sm:pb-44 lg:pb-48">
-      <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
-        <div className="max-w-xl">
-          <h1 className="hero-in text-[2.6rem] leading-[1.02] font-extrabold tracking-[-0.04em] text-ink sm:text-6xl lg:text-[4.4rem]" style={d(0)}>
-            Know where your money is going.
-            <span className="mt-1 block text-ink-3">And where it&apos;s coming from.</span>
-          </h1>
-          <p className="hero-in mt-7 max-w-md text-lg leading-relaxed text-ink-2" style={d(1)}>
-            Track payments, recurring expenses, bills, and money you&apos;re expecting — all in one beautifully simple place.
-          </p>
-          <div className="hero-in mt-10 flex flex-col gap-3 min-[420px]:flex-row" style={d(2)}>
-            <PrimaryCta>Get Started</PrimaryCta>
-            <SecondaryCta>Log In</SecondaryCta>
-          </div>
-          <p className="hero-in mt-6 text-sm text-ink-3" style={d(3)}>
-            Free to use. Made for rupees, EMIs and rent.
-          </p>
-        </div>
-        <div className="lg:pl-4">
-          <HeroVisual />
+    <section id="product" aria-labelledby="product-title" className="relative px-5 py-28 sm:px-8 sm:py-40">
+      <div className="mx-auto max-w-[88rem]">
+        <SectionHead id="product-title" fig="Fig. 03 — The command centre" title={<>The whole picture, <em className="text-ink-3">on one screen.</em></>}>
+          Money going out, money coming in, what&apos;s overdue, what&apos;s invested and what you&apos;re saving for. Try it below.
+        </SectionHead>
+        <div data-reveal style={d(2)} className="mt-16 sm:mt-20">
+          <ProductPreview />
         </div>
       </div>
     </section>
   );
 }
 
-/* --------------------------------------------------------------- Problem */
+/* --------------------------------------------------------------- Receipt */
 
-const CHAOS = [
-  { label: "Electricity bill", amount: "₹2,100", dir: "PAY", x: "-38%", y: "-30px", r: "-7deg" },
-  { label: "Car EMI", amount: "₹12,500", dir: "PAY", x: "34%", y: "-58px", r: "6deg" },
-  { label: "Rent to pay", amount: "₹25,000", dir: "PAY", x: "-22%", y: "10px", r: "4deg" },
-  { label: "Rent to collect", amount: "₹18,000", dir: "RECEIVE", x: "40%", y: "-6px", r: "-5deg" },
-  { label: "Netflix", amount: "₹649", dir: "PAY", x: "-44%", y: "24px", r: "8deg" },
-  { label: "Arjun owes you", amount: "₹3,000", dir: "RECEIVE", x: "26%", y: "40px", r: "-9deg" },
-  { label: "You owe Priya", amount: "₹1,200", dir: "PAY", x: "-10%", y: "64px", r: "5deg" },
-] as const;
-
-function Problem() {
+function Receipt() {
   return (
-    <section className="border-y border-line bg-surface px-5 py-24 sm:px-8 sm:py-32">
-      <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-2">
+    <section aria-labelledby="receipt-title" className="relative overflow-hidden border-y border-line bg-[#0d0d0e] px-5 py-28 sm:px-8 sm:py-40">
+      <div className="receipt-glow pointer-events-none absolute inset-0" aria-hidden />
+      <div className="relative mx-auto grid max-w-[88rem] items-center gap-16 lg:grid-cols-[1fr_auto] lg:gap-24">
         <div>
-          <h2 data-reveal className="text-4xl leading-[1.05] font-extrabold tracking-[-0.035em] sm:text-5xl">
-            Your financial life shouldn&apos;t live in five different places.
-          </h2>
-          <p data-reveal style={d(1)} className="mt-6 max-w-md text-lg leading-relaxed text-ink-2">
-            Bills in your inbox. EMIs on a calendar. Rent to pay, rent to collect. Subscriptions you forgot about. Money people owe
-            you, and money you owe them.
-          </p>
-          <p data-reveal style={d(2)} className="mt-4 max-w-md text-lg leading-relaxed text-ink">
-            Payment Tracker puts all of it in one list, so nothing slips.
-          </p>
+          <SectionHead id="receipt-title" fig="Fig. 04 — The paper trail" title={<>Settle it, and it <em className="text-brass">prints.</em></>}>
+            Mark a payment as paid or received and Payment Tracker prints a record of it: amount, date, category, who it was
+            with. Print it, save it as a PDF or download it.
+          </SectionHead>
+          <ul data-reveal style={d(3)} className="mt-10 grid max-w-lg gap-4 font-mono text-[13px] text-ink-3 sm:grid-cols-2">
+            <li className="border-t border-line pt-3">A personal record for your own files.</li>
+            <li className="border-t border-line pt-3">Not a bank, payment or tax receipt, and it says so.</li>
+          </ul>
         </div>
-
-        <div data-reveal-group className="relative mx-auto w-full max-w-md">
-          <div className="chaos-frame shadow-product absolute -inset-3 rounded-[24px] border border-line bg-canvas sm:-inset-5 sm:rounded-[26px]" />
-          <div className="relative">
-            <div className="chaos-frame mb-3 flex items-center justify-between px-1">
-              <span className="text-sm font-bold">Everything, in one place</span>
-              <span className="text-xs text-ink-3">7 items</span>
-            </div>
-            <ul className="space-y-2">
-              {CHAOS.map((c, i) => (
-                <li
-                  key={c.label}
-                  className="chaos-chip relative flex items-center gap-3 rounded-xl border border-line bg-surface py-2.5 pr-4 pl-3.5 shadow-[0_2px_8px_-4px_rgb(20_28_43/0.15)]"
-                  style={{ "--x": c.x, "--y": c.y, "--r": c.r, "--i": i } as React.CSSProperties}
-                >
-                  <span
-                    className={`grid size-7 shrink-0 place-items-center rounded-lg ${
-                      c.dir === "PAY" ? "bg-pay-soft text-pay-strong" : "bg-receive-soft text-receive-strong"
-                    }`}
-                  >
-                    {c.dir === "PAY" ? <ArrowOut width={13} height={13} /> : <ArrowIn width={13} height={13} />}
-                  </span>
-                  <span className="flex-1 truncate text-sm font-medium">{c.label}</span>
-                  <span className={`num text-sm font-bold ${c.dir === "PAY" ? "text-ink" : "text-receive-strong"}`}>
-                    {c.dir === "RECEIVE" ? "+" : ""}
-                    {c.amount}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <ReceiptShowcase />
       </div>
     </section>
   );
@@ -146,172 +98,145 @@ function Problem() {
 
 /* -------------------------------------------------------------- Features */
 
-const FEATURES = [
-  {
-    title: "Payments",
-    body: "Never lose track of what needs to be paid. Rent, EMIs, bills and one-off expenses, sorted by when they're due.",
-    Icon: ArrowOut,
-    tone: "pay",
-  },
-  {
-    title: "Money to receive",
-    body: "Know exactly what you're waiting for. Salary, rent from tenants, refunds and money friends owe you.",
-    Icon: ArrowIn,
-    tone: "receive",
-  },
-  {
-    title: "Recurring",
-    body: "Set it once. Mark this month's rent as paid and next month's shows up on its own, on the right date.",
-    Icon: Repeat,
-    tone: "neutral",
-  },
-  {
-    title: "Dashboard",
-    body: "Your financial picture at a glance: what's due today, this week, what's overdue, and what's coming in.",
-    Icon: Home,
-    tone: "neutral",
-  },
-  {
-    title: "Expenses",
-    body: "Understand where your money actually goes, with a simple monthly summary and a breakdown by category.",
-    Icon: BarChart,
-    tone: "neutral",
-  },
-  {
-    title: "Organised",
-    body: "Everything categorised, searchable and easy to find. Filter by status, category or date in a tap.",
-    Icon: Search,
-    tone: "neutral",
-  },
-] as const;
-
 function Features() {
   return (
-    <section id="features" className="px-5 py-24 sm:px-8 sm:py-32">
-      <div className="mx-auto max-w-6xl">
-        <div className="max-w-2xl">
-          <h2 data-reveal className="text-4xl leading-[1.05] font-extrabold tracking-[-0.035em] sm:text-5xl">
-            Everything you need. Nothing you don&apos;t.
-          </h2>
-          <p data-reveal style={d(1)} className="mt-5 text-lg leading-relaxed text-ink-2">
-            Built around one question: what do I need to pay, and what am I owed?
+    <section id="features" aria-labelledby="features-title" className="px-5 py-28 sm:px-8 sm:py-40">
+      <div className="mx-auto max-w-[88rem]">
+        <SectionHead id="features-title" fig="Fig. 05 — Instruments" title={<>Four ways to see <br className="hidden sm:block" /> the same money.</>} />
+
+        <article className="mt-24 sm:mt-32" aria-labelledby="f-flow">
+          <SceneTitle id="f-flow" n="05.1" title="Where it went." body="Analytics trace a month from what came in to every place it went, by category, with the trend over time." />
+          <div className="mt-12">
+            <CashFlowScene />
+          </div>
+        </article>
+
+        <article className="mt-32 sm:mt-44" aria-labelledby="f-cal">
+          <SceneTitle
+            id="f-cal"
+            n="05.2"
+            title="What's coming."
+            body="Rent, EMIs, SIPs and bills on one calendar, with a forecast of your balance day by day. Pick a date."
+          />
+          <div className="mt-12">
+            <CalendarScene />
+          </div>
+        </article>
+
+        <article className="mt-32 sm:mt-44" aria-labelledby="f-goal">
+          <SceneTitle
+            id="f-goal"
+            n="05.3"
+            title="Fill it on purpose."
+            body="Savings goals keep a ledger of every contribution and withdrawal, and tell you what it takes to finish on time. Try the buttons."
+          />
+          <div className="mt-14">
+            <GoalScene />
+          </div>
+        </article>
+
+        <article className="mt-32 sm:mt-44" aria-labelledby="f-inv">
+          <SceneTitle
+            id="f-inv"
+            n="05.4"
+            title="Contributions, then growth."
+            body="Track mutual funds, SIPs, stocks, ETFs and gold. Fund NAVs come from AMFI's daily file; other prices are delayed quotes or ones you enter, each shown with its source and date."
+          />
+          <div className="mt-14">
+            <InvestScene />
+          </div>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function SceneTitle({ id, n, title, body }: { id: string; n: string; title: string; body: string }) {
+  return (
+    <div className="grid gap-4 border-t border-line pt-6 md:grid-cols-[6rem_1fr_1fr] md:gap-8">
+      <span data-reveal className="font-mono text-xs text-ink-3">
+        {n}
+      </span>
+      <h3 id={id} data-reveal style={d(1)} className="font-display text-[clamp(2rem,4vw,3.25rem)] leading-none text-ink">
+        {title}
+      </h3>
+      <p data-reveal style={d(2)} className="max-w-md text-[17px] leading-relaxed text-ink-2">
+        {body}
+      </p>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------- Security */
+
+// Only protections verified in this codebase (see docs/SECURITY.md).
+const PROTECTIONS = [
+  ["Passwords", "Hashed with salted scrypt by Better Auth. The app never stores or reads the password itself."],
+  ["Sessions", "An httpOnly cookie, checked against the database on every request. Sign out other devices and it takes effect at once."],
+  ["Your records only", "Every query is scoped to your account, and tests check that one account can't read or change another's."],
+  ["Sign-in limits", "Sign-in attempts are rate-limited per address. Too many in a short time and they're refused."],
+  ["In the browser", "A strict Content Security Policy: scripts run only with a fresh per-request nonce."],
+  ["Leaving", "Export everything as JSON or CSV. Delete your account with your password, and every record goes with it."],
+  ["Market prices", "Fetched by our server. Your holdings are never sent to a price provider."],
+] as const;
+
+function Security() {
+  return (
+    <section id="security" aria-labelledby="security-title" className="border-t border-line bg-[#0d0d0e] px-5 py-28 sm:px-8 sm:py-40">
+      <div className="mx-auto grid max-w-[88rem] gap-16 lg:grid-cols-[1fr_1.2fr] lg:gap-24">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <SectionHead id="security-title" fig="Fig. 06 — Specification" title={<>Quiet about your data. <em className="text-ink-3">Strict about access.</em></>}>
+            What protects your account, stated plainly. No system is perfectly secure; this is what we actually do.
+          </SectionHead>
+          <p data-reveal style={d(3)} className="mt-6 text-sm text-ink-3">
+            Details in the{" "}
+            <Link href="/privacy" className="text-ink underline decoration-line-strong underline-offset-4 hover:decoration-brass">
+              privacy policy
+            </Link>
+            .
           </p>
         </div>
-
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ title, body, Icon, tone }, i) => (
-            <div
-              key={title}
-              data-reveal
-              style={d(i % 3)}
-              className="group rounded-2xl border border-line bg-surface p-6 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-line-strong hover:shadow-[0_18px_40px_-22px_rgb(20_28_43/0.35)] sm:p-7"
-            >
-              <span
-                className={`grid size-11 place-items-center rounded-xl transition-transform duration-300 group-hover:scale-105 ${
-                  tone === "pay"
-                    ? "bg-pay-soft text-pay-strong"
-                    : tone === "receive"
-                      ? "bg-receive-soft text-receive-strong"
-                      : "bg-canvas text-ink"
-                }`}
-              >
-                <Icon width={20} height={20} />
-              </span>
-              <h3 className="mt-6 text-lg font-bold tracking-tight">{title}</h3>
-              <p className="mt-2 leading-relaxed text-ink-2">{body}</p>
+        <dl className="border-t border-line">
+          {PROTECTIONS.map(([k, v], i) => (
+            <div key={k} data-reveal style={d(i % 3)} className="grid gap-2 border-b border-line py-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
+              <dt className="flex items-baseline gap-3 font-mono text-[12px] tracking-[0.12em] text-brass uppercase">
+                <span className="text-ink-3">{String(i + 1).padStart(2, "0")}</span>
+                {k}
+              </dt>
+              <dd className="text-[16px] leading-relaxed text-ink-2">{v}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </div>
     </section>
   );
 }
 
-/* ---------------------------------------------------------- How it works */
+/* --------------------------------------------------------------- Closing */
 
-const STEPS = [
-  { title: "Add what matters", body: "Rent, EMIs, bills, salary, money someone owes you. Choose pay or receive, an amount and a date." },
-  { title: "Track what's due", body: "Your dashboard shows what's due today, this week and what's overdue, without any digging." },
-  { title: "Stay ahead of your money", body: "Mark things paid with one tap. Recurring items roll forward on their own, every month." },
-];
-
-function HowItWorks() {
+function Closing() {
   return (
-    <section id="how-it-works" className="border-y border-line bg-surface px-5 py-24 sm:px-8 sm:py-32">
-      <div className="mx-auto max-w-6xl">
-        <h2 data-reveal className="max-w-2xl text-4xl leading-[1.05] font-extrabold tracking-[-0.035em] sm:text-5xl">
-          Three steps. That&apos;s it.
+    <section aria-labelledby="closing-title" className="relative overflow-hidden px-5 py-32 text-center sm:px-8 sm:py-48">
+      <div className="closing-rings pointer-events-none absolute inset-0 flex items-center justify-center opacity-20 sm:opacity-35" aria-hidden>
+        <RingsFallback className="h-[85%] w-auto max-w-none sm:h-[120%]" />
+      </div>
+      <div className="closing-veil pointer-events-none absolute inset-0" aria-hidden />
+      <div className="relative mx-auto max-w-4xl">
+        <p data-reveal className={`${eyebrow} text-mint`}>
+          Fig. 07 — In alignment
+        </p>
+        <h2 id="closing-title" data-reveal style={d(1)} className={`${display} mt-6 text-[clamp(3.2rem,9vw,8.5rem)] leading-[0.88]`}>
+          Bring your money <em className="text-brass">into focus.</em>
         </h2>
-        <ol className="mt-16 grid gap-12 md:grid-cols-3 md:gap-8">
-          {STEPS.map((s, i) => (
-            <li key={s.title} data-reveal style={d(i)} className="relative">
-              <div className="flex items-center gap-4">
-                <span className="num text-sm font-bold text-ink-3">0{i + 1}</span>
-                <span className="h-px flex-1 bg-line-strong" aria-hidden />
-              </div>
-              <h3 className="mt-6 text-xl font-bold tracking-tight">{s.title}</h3>
-              <p className="mt-2 max-w-xs leading-relaxed text-ink-2">{s.body}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------- Showcase */
-
-function Showcase() {
-  return (
-    <section className="px-5 py-24 sm:px-8 sm:py-32">
-      <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 data-reveal className="text-4xl leading-[1.05] font-extrabold tracking-[-0.035em] sm:text-5xl">
-            One look, and you know where you stand.
-          </h2>
-          <p data-reveal style={d(1)} className="mt-5 text-lg leading-relaxed text-ink-2">
-            What you owe on the left, what you&apos;re owed on the right. Overdue items stand out, so they never get missed.
-          </p>
-        </div>
-        <div data-reveal style={d(2)} className="relative mt-16">
-          <div
-            className="pointer-events-none absolute inset-x-[8%] -top-10 -bottom-10 -z-10 rounded-[60px] bg-[radial-gradient(50%_60%_at_50%_45%,var(--color-pay-soft),transparent_75%)]"
-            aria-hidden
-          />
-          <DashboardMockup />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------- Final CTA */
-
-function FinalCta() {
-  return (
-    <section className="px-5 pb-24 sm:px-8 sm:pb-32">
-      <div
-        data-reveal
-        className="relative mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-ink px-6 py-20 text-center text-on-ink sm:px-12 sm:py-28"
-      >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-60 [background:radial-gradient(40%_60%_at_20%_0%,color-mix(in_srgb,var(--color-pay)_45%,transparent),transparent_70%),radial-gradient(40%_60%_at_85%_100%,color-mix(in_srgb,var(--color-receive)_40%,transparent),transparent_70%)]"
-          aria-hidden
-        />
-        <div className="relative">
-          <h2 className="text-5xl leading-[1] font-extrabold tracking-[-0.04em] sm:text-7xl">
-            Your money.
-            <span className="block opacity-60">One place.</span>
-          </h2>
-          <p className="mx-auto mt-7 max-w-md text-lg leading-relaxed opacity-75">
-            Start keeping track of what you owe, what you&apos;re owed, and everything in between.
-          </p>
-          <Link
-            href="/signup"
-            className="press group mt-10 inline-flex h-14 items-center justify-center gap-2 rounded-full bg-on-ink px-8 text-base font-semibold text-ink shadow-[0_14px_30px_-12px_rgb(0_0_0/0.5)] hover:-translate-y-px"
-          >
-            Get Started — It&apos;s Free
-            <ArrowRight width={16} height={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+        <p data-reveal style={d(2)} className="mx-auto mt-8 max-w-md text-lg leading-relaxed text-ink-2">
+          Free to use. Built for rupees, rent and EMIs. Set up in a few minutes.
+        </p>
+        <div data-reveal style={d(3)} className="mt-11 flex flex-col items-center justify-center gap-3 min-[420px]:flex-row">
+          <Link href="/signup" className={`${btnPaper} h-14 px-8 text-base`}>
+            Create your account <span aria-hidden>→</span>
+          </Link>
+          <Link href="/login" className={`${btnGhost} h-14 px-8 text-base`}>
+            I have an account
           </Link>
         </div>
       </div>
@@ -329,20 +254,20 @@ function Footer() {
     { href: "/terms", label: "Terms" },
   ];
   return (
-    <footer className="border-t border-line px-5 py-12 sm:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="border-t border-line px-5 py-14 sm:px-8">
+      <div className="mx-auto flex max-w-[88rem] flex-col gap-10 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="flex items-center gap-2 font-bold tracking-tight">
-            <span aria-hidden className="grid size-7 place-items-center rounded-md bg-ink text-[13px] font-extrabold text-on-ink">
-              ₹
-            </span>
-            Payment Tracker
-          </div>
-          <p className="mt-2 max-w-xs text-sm text-ink-3">What you owe, what you&apos;re owed, and when. All in one place.</p>
+          <Link href="/" className="flex items-center gap-3 text-ink">
+            <InstrumentMark className="size-8" />
+            <span className="font-display text-2xl">Payment Tracker</span>
+          </Link>
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-3">
+            What you owe, what you&apos;re owed, and everything in between. Figures on this page are illustrative samples.
+          </p>
         </div>
-        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-ink-2" aria-label="Footer">
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-7 gap-y-3 text-sm text-ink-2">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="transition-colors hover:text-ink">
+            <Link key={l.href} href={l.href} className="underline-offset-4 transition-colors hover:text-ink hover:underline">
               {l.label}
             </Link>
           ))}

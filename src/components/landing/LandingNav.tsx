@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { InstrumentMark } from "./hero/RingsFallback";
 
 const LINKS = [
+  { href: "#product", label: "Product" },
   { href: "#features", label: "Features" },
-  { href: "#how-it-works", label: "How it works" },
+  { href: "#security", label: "Security" },
 ];
 
 export function LandingNav() {
@@ -13,7 +15,7 @@ export function LandingNav() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -29,43 +31,35 @@ export function LandingNav() {
   return (
     <header
       data-scrolled={scrolled || open || undefined}
-      className="group/nav fixed inset-x-0 top-0 z-50 border-b border-transparent transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 data-scrolled:border-line/70 data-scrolled:bg-canvas/75 data-scrolled:shadow-[0_8px_30px_-18px_rgb(20_28_43/0.25)] data-scrolled:backdrop-blur-xl"
+      className="fixed inset-x-0 top-0 z-50 border-b border-transparent transition-[background-color,border-color,backdrop-filter] duration-500 data-scrolled:border-line data-scrolled:bg-studio/70 data-scrolled:backdrop-blur-xl"
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-5 sm:px-8">
-        <Link href="/" className="press flex items-center gap-2.5 font-bold tracking-tight" onClick={() => setOpen(false)}>
-          <span aria-hidden className="grid size-8 place-items-center rounded-lg bg-ink text-sm font-extrabold text-on-ink">
-            ₹
-          </span>
-          <span className="text-[15px]">Payment Tracker</span>
+      <div className="mx-auto flex h-16 max-w-[88rem] items-center gap-6 px-5 sm:h-[4.5rem] sm:px-8">
+        <Link href="/" className="press flex min-w-0 items-center gap-2 text-ink" onClick={() => setOpen(false)} aria-label="Payment Tracker, home">
+          <InstrumentMark className="size-7" />
+          <span className="font-display text-[1.25rem] leading-none tracking-[-0.01em] whitespace-nowrap sm:text-[1.45rem]">Payment Tracker</span>
         </Link>
 
         <nav className="ml-auto hidden items-center gap-1 md:flex" aria-label="Main">
           {LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-ink-2 transition-colors duration-200 hover:text-ink"
-            >
+            <a key={l.href} href={l.href} className="rounded-full px-3.5 py-2 text-sm text-ink-2 transition-colors duration-200 hover:text-ink focus-visible:outline-2 focus-visible:outline-brass">
               {l.label}
             </a>
           ))}
-          <Link
-            href="/login"
-            className="rounded-full px-3.5 py-2 text-sm font-medium text-ink-2 transition-colors duration-200 hover:text-ink"
-          >
+          <span className="mx-2 h-4 w-px bg-line-strong" aria-hidden />
+          <Link href="/login" className="rounded-full px-3.5 py-2 text-sm text-ink-2 transition-colors duration-200 hover:text-ink focus-visible:outline-2 focus-visible:outline-brass">
             Log in
           </Link>
           <Link
             href="/signup"
-            className="press ml-2 rounded-full bg-ink px-4.5 py-2 text-sm font-semibold text-on-ink shadow-[0_6px_16px_-6px_rgb(20_28_43/0.45)] hover:opacity-90"
+            className="press ml-1 rounded-full bg-paper px-4.5 py-2 text-sm font-semibold text-studio transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brass"
           >
-            Get Started
+            Get started
           </Link>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2 md:hidden">
-          <Link href="/signup" className="press rounded-full bg-ink px-4 py-2 text-sm font-semibold text-on-ink">
-            Get Started
+        <div className="ml-auto flex items-center gap-1 md:hidden">
+          <Link href="/signup" className="press rounded-full bg-paper px-3.5 py-2 text-[13px] font-semibold whitespace-nowrap text-studio">
+            Get started
           </Link>
           <button
             type="button"
@@ -73,15 +67,11 @@ export function LandingNav() {
             aria-controls="mobile-menu"
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((o) => !o)}
-            className="press grid size-10 place-items-center rounded-full text-ink hover:bg-surface"
+            className="press grid size-11 place-items-center rounded-full text-ink hover:bg-white/5"
           >
             <span className="relative block h-3 w-[18px]" aria-hidden>
-              <span
-                className={`absolute left-0 h-[1.5px] w-full rounded bg-current transition-transform duration-300 ${open ? "top-1/2 rotate-45" : "top-0"}`}
-              />
-              <span
-                className={`absolute left-0 h-[1.5px] w-full rounded bg-current transition-transform duration-300 ${open ? "top-1/2 -rotate-45" : "bottom-0"}`}
-              />
+              <span className={`absolute left-0 h-[1.5px] w-full rounded bg-current transition-transform duration-300 ${open ? "top-1/2 rotate-45" : "top-0"}`} />
+              <span className={`absolute left-0 h-[1.5px] w-full rounded bg-current transition-transform duration-300 ${open ? "top-1/2 -rotate-45" : "bottom-0"}`} />
             </span>
           </button>
         </div>
@@ -93,14 +83,14 @@ export function LandingNav() {
         className="grid grid-rows-[0fr] overflow-hidden transition-[grid-template-rows] duration-300 ease-out data-open:grid-rows-[1fr] md:hidden"
       >
         <nav className="min-h-0" aria-label="Mobile">
-          <div className="flex flex-col gap-1 px-5 pt-1 pb-5">
+          <div className="flex flex-col px-5 pt-1 pb-6">
             {[...LINKS, { href: "/login", label: "Log in" }].map((l) => (
               <a
                 key={l.href}
                 href={l.href}
                 tabIndex={open ? 0 : -1}
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-3 py-3 text-base font-medium text-ink-2 hover:bg-surface hover:text-ink"
+                className="border-b border-line py-4 font-display text-3xl text-ink"
               >
                 {l.label}
               </a>

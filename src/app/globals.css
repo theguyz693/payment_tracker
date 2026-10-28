@@ -71,6 +71,14 @@
   --color-green-9: #30a46c;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Landing page ("The Instrument"): always-dark studio palette. */
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --color-studio: #0a0a0b;
+  --color-paper: #ece6da;
+  --color-brass: #c9a46b;
+  --color-mint: #8fd9bf;
+  --color-ember: #e8735a;
 }
 
 .dark {
@@ -383,24 +391,118 @@ dialog.modal[data-state="closing"] .modal-panel {
   }
 }
 
-/* ---------- Landing page ---------- */
+/* ---------- Landing page ("The Instrument") ---------- */
 
+/* The landing page is always dark and sits apart from the app theme: the
+   shared tokens are re-scoped here, so shared components (the receipt
+   printer's buttons, AnimatedNumber) pick them up. */
+.landing {
+  color-scheme: dark;
+  --color-canvas: #0a0a0b;
+  --color-surface: #141416;
+  --color-ink: #ece6da;
+  --color-ink-2: #b8b2a7;
+  --color-ink-3: #8c877e;
+  --color-line: rgb(236 230 218 / 0.09);
+  --color-line-strong: rgb(236 230 218 / 0.2);
+  --color-on-ink: #0a0a0b;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
 html:has(.landing) {
   scroll-behavior: smooth;
+  background: #0a0a0b;
 }
 .landing section[id] {
-  scroll-margin-top: 5rem;
+  scroll-margin-top: 4.5rem;
+}
+.landing ::selection {
+  background: rgb(201 164 107 / 0.35);
+}
+/* Film grain over everything (fixed, so it costs one layer). */
+.landing::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: url("/textures/plastic-noise.svg");
+  background-size: 180px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 70;
+  border-radius: 999px;
+  background: var(--color-paper);
+  color: var(--color-studio);
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+}
+.skip-link:focus {
+  top: 1rem;
 }
 
-/* Scroll reveal: elements start slightly lowered and transparent, and settle
-   when RevealObserver marks them visible. Without JS (no .js class) they
-   simply show. */
+/* Hero: a studio floor and a soft key light behind the instrument. */
+.hero-floor {
+  background:
+    radial-gradient(60% 50% at 72% 42%, rgb(201 164 107 / 0.1), transparent 70%),
+    radial-gradient(80% 40% at 50% 100%, rgb(236 230 218 / 0.06), transparent 70%),
+    linear-gradient(#0a0a0b, #0d0d0f 70%, #0a0a0b);
+}
+@media (max-width: 1023px) {
+  .hero-floor {
+    background:
+      radial-gradient(90% 40% at 50% 26%, rgb(201 164 107 / 0.12), transparent 70%),
+      linear-gradient(#0a0a0b, #0d0d0f);
+  }
+  /* Keep the copy legible where it overlaps the instrument. */
+  .hero-copy {
+    position: relative;
+  }
+  .hero-copy::before {
+    content: "";
+    position: absolute;
+    inset: -3rem -2rem -1rem;
+    z-index: -1;
+    background: linear-gradient(transparent, #0a0a0b 35%);
+  }
+}
+/* Desktop scroll choreography, driven by --p (0..1) from HeroStage. */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .hero-copy {
+    opacity: calc(1 - max(0, var(--p, 0) - 0.3) * 2.4);
+    transform: translateY(calc(var(--p, 0) * -70px));
+  }
+  .hero-copy:focus-within {
+    opacity: 1;
+  }
+  .hero-caption {
+    opacity: clamp(0, (var(--p, 0) - 0.55) * 3, 1);
+    transform: translateY(calc((1 - var(--p, 0)) * 28px));
+  }
+  .hero-cue {
+    opacity: calc(1 - var(--p, 0) * 6);
+  }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .hero-caption {
+    opacity: 1;
+  }
+}
+
+/* Scroll reveal: elements start lowered and transparent, and settle when
+   RevealObserver marks them visible. Without JS (no .js class) they show. */
 .js .landing [data-reveal] {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(22px);
   transition:
-    opacity 0.7s var(--ease-out-soft),
-    transform 0.8s var(--ease-out-soft);
+    opacity 0.9s var(--ease-out-soft),
+    transform 1s var(--ease-out-soft);
   transition-delay: calc(var(--d, 0) * 90ms);
 }
 .js .landing [data-reveal][data-in] {
@@ -408,56 +510,147 @@ html:has(.landing) {
   transform: none;
 }
 
-/* Hero product composition */
-@keyframes float-y {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
 @keyframes hero-in {
   from {
     opacity: 0;
-    transform: translateY(28px) scale(0.985);
+    transform: translateY(26px);
+    filter: blur(6px);
   }
   to {
     opacity: 1;
     transform: none;
+    filter: blur(0);
   }
 }
 .hero-in {
-  animation: hero-in 0.9s var(--ease-out-soft) both;
-  animation-delay: calc(var(--d, 0) * 110ms);
-}
-.float-slow {
-  animation: float-y 7s ease-in-out infinite;
-}
-.float-slower {
-  animation: float-y 9s ease-in-out infinite;
-  animation-delay: -3s;
+  animation: hero-in 1.1s var(--ease-out-soft) both;
+  animation-delay: calc(0.15s + var(--d, 0) * 110ms);
 }
 
-/* Problem section: scattered chips settle into one organised list. */
-.chaos-chip {
-  transition:
-    transform 1s var(--ease-out-soft),
-    opacity 0.6s ease;
-  transition-delay: calc(var(--i, 0) * 70ms);
+/* Product preview: bars grow when the panel mounts. */
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
 }
-.js .landing [data-reveal-group]:not([data-in]) .chaos-chip {
-  transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--r, 0deg));
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
 }
-.js .landing [data-reveal-group]:not([data-in]) .chaos-frame {
+.bar-grow {
+  transform-origin: bottom;
+  animation: grow-y 0.8s var(--ease-out-soft) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  transition: height 0.6s var(--ease-out-soft);
+}
+.bar-fill {
+  transform-origin: left;
+  animation: grow-x 1.1s var(--ease-out-soft) both;
+  animation-delay: calc(var(--i, 0) * 110ms);
+}
+
+/* Receipt section: a pool of warm light under the printer. */
+.receipt-glow {
+  background: radial-gradient(40% 55% at 78% 55%, rgb(201 164 107 / 0.09), transparent 70%);
+}
+
+/* Cash flow: ribbons sweep in from the left when revealed. */
+.js .landing .flow-scene .flow-svg {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.8s var(--ease-out-soft) 0.2s;
+}
+.js .landing .flow-scene[data-in] .flow-svg {
+  clip-path: inset(0 0 0 0);
+}
+
+/* Investments: lines draw in when revealed. */
+.js .landing .invest-scene .draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 2.2s var(--ease-out-soft) 0.3s;
+}
+.js .landing .invest-scene .draw-late {
+  transition-delay: 0.9s;
+}
+.js .landing .invest-scene[data-in] .draw {
+  stroke-dashoffset: 0;
+}
+.js .landing .invest-scene .draw-dot {
   opacity: 0;
+  transition: opacity 0.6s ease 2.6s;
 }
-.chaos-frame {
-  transition: opacity 0.8s ease 0.5s;
+.js .landing .invest-scene[data-in] .draw-dot {
+  opacity: 1;
 }
 
-/* Soft product shadow used by mockups */
+/* Goal vessel */
+.vessel-fill {
+  transition: height 1.1s var(--ease-out-soft);
+}
+@keyframes slosh {
+  0%,
+  100% {
+    transform: translateY(-50%) scaleX(1);
+  }
+  50% {
+    transform: translateY(-50%) scaleX(0.94);
+  }
+}
+.vessel-surface {
+  animation: slosh 4s ease-in-out infinite;
+}
+@keyframes ledger-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.ledger-row:first-child {
+  animation: ledger-in 0.5s var(--ease-out-soft);
+}
+
+/* Closing: the instrument, aligned, slowly turning behind the headline. */
+.closing-rings svg {
+  animation: turn 120s linear infinite;
+}
+@keyframes turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.closing-veil {
+  background: radial-gradient(closest-side, rgb(10 10 11 / 0.55), #0a0a0b);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing) {
+    scroll-behavior: auto;
+  }
+  .js .landing [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+  .hero-in,
+  .bar-grow,
+  .bar-fill,
+  .vessel-surface,
+  .ledger-row:first-child,
+  .closing-rings svg {
+    animation: none;
+  }
+  .js .landing .flow-scene .flow-svg {
+    clip-path: none;
+  }
+  .js .landing .invest-scene .draw {
+    stroke-dashoffset: 0;
+  }
+  .js .landing .invest-scene .draw-dot {
+    opacity: 1;
+  }
+}
+
+/* Soft product shadow (used by app pages). */
 .shadow-product {
   box-shadow:
     0 1px 0 0 rgb(255 255 255 / 0.6) inset,
@@ -470,22 +663,6 @@ html:has(.landing) {
     0 1px 0 0 rgb(255 255 255 / 0.04) inset,
     0 12px 24px -8px rgb(0 0 0 / 0.5),
     0 40px 80px -24px rgb(0 0 0 / 0.6);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html:has(.landing) {
-    scroll-behavior: auto;
-  }
-  .js .landing [data-reveal],
-  .js .landing [data-reveal-group]:not([data-in]) .chaos-chip,
-  .js .landing [data-reveal-group]:not([data-in]) .chaos-frame {
-    opacity: 1;
-    transform: none;
-  }
-  .float-slow,
-  .float-slower {
-    animation: none;
-  }
 }
 
 /* ---------- Print (receipts) ---------- */
