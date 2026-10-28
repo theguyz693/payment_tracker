@@ -1,0 +1,436 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Design tokens.
+  Direction:  pay = indigo (money going out), receive = teal (money coming in).
+  Status:     overdue = crimson, pending = amber, settled (paid/received) = slate + check.
+  Overdue is the only "loud" colour in the app, so it stands out when present.
+  Dark mode redefines the same tokens under `.dark` (see below).
+*/
+@theme {
+  --font-sans: "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #f3f4f7;
+  --color-surface: #ffffff;
+  --color-ink: #141c2b;
+  --color-on-ink: #ffffff; /* text on bg-ink (primary buttons, toasts) */
+  --color-ink-2: #4a5468;
+  --color-ink-3: #6f788b;
+  --color-line: #e2e5ec;
+  --color-line-strong: #cdd2dc;
+
+  --color-pay: #3a4bd1;
+  --color-pay-hover: #2b3aa8;
+  --color-pay-strong: #2b3aa8; /* pay-coloured text */
+  --color-pay-soft: #eceefd;
+
+  --color-receive: #0a7d62;
+  --color-receive-hover: #07624c;
+  --color-receive-strong: #07624c;
+  --color-receive-soft: #e2f3ec;
+
+  --color-overdue: #c22a3e;
+  --color-overdue-soft: #fde9ec;
+
+  --color-pending: #9a5b00;
+  --color-pending-soft: #fdf0d8;
+
+  --color-settled: #475263;
+  --color-settled-soft: #eceff3;
+
+  --color-success-icon: #7fe0c3;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  color-scheme: dark;
+  --color-canvas: #0e131b;
+  --color-surface: #161d28;
+  --color-ink: #e7eaf0;
+  --color-on-ink: #0e131b;
+  --color-ink-2: #aab2c1;
+  --color-ink-3: #8a93a5;
+  --color-line: #252e3c;
+  --color-line-strong: #364152;
+
+  --color-pay: #4b5be0;
+  --color-pay-hover: #5d6cf0;
+  --color-pay-strong: #aeb7ff;
+  --color-pay-soft: #1c2350;
+
+  --color-receive: #0b8467;
+  --color-receive-hover: #0d9877;
+  --color-receive-strong: #6fd8b9;
+  --color-receive-soft: #10302a;
+
+  --color-overdue: #d93c51;
+  --color-overdue-soft: #3a1720;
+
+  --color-pending: #f2b552;
+  --color-pending-soft: #3a2a10;
+
+  --color-settled: #b3bccb;
+  --color-settled-soft: #252d39;
+
+  --color-success-icon: #0a7d62;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.2s ease;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-pay);
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  kbd {
+    font-family: inherit;
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Buttons: immediate press feedback + smooth colour changes. */
+@utility press {
+  transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: var(--ease-out-soft);
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes flash {
+  from {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-receive) 35%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Page enter (route transitions via app/(app)/template.tsx) */
+.page-enter {
+  animation: fade-in 0.22s ease-out both;
+}
+
+/* Staggered entrance: set style="--i: n" on the element. */
+.rise {
+  animation: rise 0.42s var(--ease-out-soft) both;
+  animation-delay: calc(min(var(--i, 0), 12) * 35ms);
+}
+
+.fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
+.pop {
+  animation: pop 0.35s var(--ease-out-soft) both;
+}
+
+.bar-grow {
+  transform-origin: left center;
+  animation: grow-x 0.7s var(--ease-out-soft) both;
+  animation-delay: calc(var(--i, 0) * 60ms + 120ms);
+}
+
+.flash {
+  animation: flash 1.1s ease-out;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+.skeleton {
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-line) 25%,
+    color-mix(in srgb, var(--color-line) 45%, var(--color-surface)) 50%,
+    var(--color-line) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Rows that collapse smoothly when removed (see RowShell). */
+.row-shell {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition:
+    grid-template-rows 0.28s var(--ease-out-soft),
+    opacity 0.22s ease,
+    margin 0.28s var(--ease-out-soft);
+}
+.row-shell[data-phase="leaving"] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0 !important;
+}
+.row-shell > * {
+  min-height: 0;
+}
+.row-shell[data-phase="leaving"] > * {
+  overflow: hidden;
+}
+.row-shell[data-flash] > * > * {
+  animation: flash 1.1s ease-out;
+}
+
+/* Native <dialog> used by ConfirmDialog */
+dialog.modal {
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+dialog.modal::backdrop {
+  background: transparent;
+}
+dialog.modal .modal-overlay {
+  transition: opacity 0.18s ease;
+}
+dialog.modal .modal-panel {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s var(--ease-out-soft);
+}
+dialog.modal[data-state="open"] .modal-panel {
+  animation: dialog-in 0.22s var(--ease-out-soft) both;
+}
+dialog.modal[data-state="closing"] .modal-overlay,
+dialog.modal[data-state="closing"] .modal-panel {
+  opacity: 0;
+}
+dialog.modal[data-state="closing"] .modal-panel {
+  transform: translateY(6px) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* ---------- Landing page ---------- */
+
+html:has(.landing) {
+  scroll-behavior: smooth;
+}
+.landing section[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* Scroll reveal: elements start slightly lowered and transparent, and settle
+   when RevealObserver marks them visible. Without JS (no .js class) they
+   simply show. */
+.js .landing [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s var(--ease-out-soft),
+    transform 0.8s var(--ease-out-soft);
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+.js .landing [data-reveal][data-in] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero product composition */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-in {
+  animation: hero-in 0.9s var(--ease-out-soft) both;
+  animation-delay: calc(var(--d, 0) * 110ms);
+}
+.float-slow {
+  animation: float-y 7s ease-in-out infinite;
+}
+.float-slower {
+  animation: float-y 9s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+/* Problem section: scattered chips settle into one organised list. */
+.chaos-chip {
+  transition:
+    transform 1s var(--ease-out-soft),
+    opacity 0.6s ease;
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.js .landing [data-reveal-group]:not([data-in]) .chaos-chip {
+  transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--r, 0deg));
+}
+.js .landing [data-reveal-group]:not([data-in]) .chaos-frame {
+  opacity: 0;
+}
+.chaos-frame {
+  transition: opacity 0.8s ease 0.5s;
+}
+
+/* Soft product shadow used by mockups */
+.shadow-product {
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.6) inset,
+    0 1px 2px rgb(20 28 43 / 0.06),
+    0 12px 24px -8px rgb(20 28 43 / 0.12),
+    0 40px 80px -24px rgb(20 28 43 / 0.22);
+}
+.dark .shadow-product {
+  box-shadow:
+    0 1px 0 0 rgb(255 255 255 / 0.04) inset,
+    0 12px 24px -8px rgb(0 0 0 / 0.5),
+    0 40px 80px -24px rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(.landing) {
+    scroll-behavior: auto;
+  }
+  .js .landing [data-reveal],
+  .js .landing [data-reveal-group]:not([data-in]) .chaos-chip,
+  .js .landing [data-reveal-group]:not([data-in]) .chaos-frame {
+    opacity: 1;
+    transform: none;
+  }
+  .float-slow,
+  .float-slower {
+    animation: none;
+  }
+}
