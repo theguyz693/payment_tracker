@@ -42,6 +42,18 @@
 
   --color-success-icon: #7fe0c3;
 
+  /* Command Centre additions: gains/losses, investing, saving, gold. */
+  --color-gain: #0a7d62;
+  --color-gain-soft: #e2f3ec;
+  --color-loss: #b8263f;
+  --color-loss-soft: #fbe7ea;
+  --color-invest: #6d4bd8;
+  --color-invest-soft: #efeafd;
+  --color-save: #0b6fa4;
+  --color-save-soft: #e3f1f9;
+  --color-gold: #a26a08;
+  --color-gold-soft: #fbf1dc;
+
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -76,6 +88,17 @@
   --color-settled-soft: #252d39;
 
   --color-success-icon: #0a7d62;
+
+  --color-gain: #6fd8b9;
+  --color-gain-soft: #10302a;
+  --color-loss: #f18b9c;
+  --color-loss-soft: #3a1720;
+  --color-invest: #b4a2ff;
+  --color-invest-soft: #251f45;
+  --color-save: #7cc6ee;
+  --color-save-soft: #102b3a;
+  --color-gold: #f0c26a;
+  --color-gold-soft: #33270f;
 }
 
 @layer base {
@@ -433,4 +456,36 @@ html:has(.landing) {
   .float-slower {
     animation: none;
   }
+}
+
+/* ---------- Print (receipts) ---------- */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 80mm;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Mobile navigation sheet */
+@keyframes sheet-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.nav-sheet {
+  animation: sheet-in 0.24s var(--ease-out-soft) both;
 }

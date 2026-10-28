@@ -7,7 +7,7 @@
 //   A receivable is never counted as money received.
 // - Scheduled: future occurrences of open items, expanded from the recurrence rule.
 
-import { addDays, monthBounds, monthKey } from "./dates";
+import { addDays, diffDays, monthBounds, monthKey } from "./dates";
 import { monthsInRange } from "./period";
 import { annualCost, monthlyCost, occurrencesBetween } from "./recurrence";
 import type { Direction, Frequency, ISODate, Settlement, Transaction } from "./types";
@@ -253,4 +253,54 @@ export function earliestActivity(settlements: Settlement[], flows: InvestmentFlo
   for (const s of settlements) if (!min || s.settledOn < min) min = s.settledOn;
   for (const f of flows) if (!min || f.date < min) min = f.date;
   return min;
+}
+
+/** Spending per month for the top categories over [start, end] (for trend tables). */
+export function categoryTrend(
+  settlements: Settlement[],
+  start: ISODate,
+  end: ISODate,
+  top = 5,
+): { categories: { id: string; name: string }[]; rows: { month: string; values: number[]; otherPaise: number }[] } {
+  const cats = spendingByCategory(settlements, start, end).slice(0, top);
+  const rows = monthsInRange(start, end).map((month) => {
+    const b = monthBounds(month);
+    const inMonth = spendingByCategory(settlements, b.start > start ? b.start : start, b.end < end ? b.end : end);
+    const values = cats.map((c) => inMonth.find((x) => x.id === c.id)?.totalPaise ?? 0);
+    const total = inMonth.reduce((a, x) => a + x.totalPaise, 0);
+    return { month, values, otherPaise: total - values.reduce((a, v) => a + v, 0) };
+  });
+  return { categories: cats.map(({ id, name }) => ({ id, name })), rows };
+}
+
+/** The same-length period immediately before [start, end]. */
+export function previousPeriod(start: ISODate, end: ISODate): { start: ISODate; end: ISODate } {
+  const days = diffDays(end, start) + 1;
+  return { start: addDays(start, -days), end: addDays(start, -1) };
+}
+
+/**
+ * Estimated cash at each month end from a known starting balance, using only
+ * recorded actuals. Starts at the balance date — never earlier.
+ */
+export function cashTrend(
+  startBalancePaise: number,
+  asOf: ISODate,
+  settlements: Settlement[],
+  flows: InvestmentFlow[],
+  today: ISODate,
+): { date: ISODate; value: number }[] {
+  const points: { date: ISODate; value: number }[] = [{ date: asOf, value: startBalancePaise }];
+  const months = monthsInRange(asOf, today);
+  let bal = startBalancePaise;
+  let from = addDays(asOf, 1);
+  for (const m of months) {
+    const end = monthBounds(m).end < today ? monthBounds(m).end : today;
+    if (end < from) continue;
+    const t = cashFlowTotals(settlements, flows, from, end);
+    bal += t.netPaise;
+    points.push({ date: end, value: bal });
+    from = addDays(end, 1);
+  }
+  return points;
 }

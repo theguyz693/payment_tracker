@@ -44,7 +44,7 @@ function useTheme(): [Theme, (t: Theme) => void] {
   ];
 }
 
-export function UserMenu({ user }: { user: { name: string; email: string } }) {
+export function UserMenu({ user, placement = "down" }: { user: { name: string; email: string }; placement?: "down" | "up" }) {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useTheme();
   const [signingOut, setSigningOut] = useState(false);
@@ -108,7 +108,7 @@ export function UserMenu({ user }: { user: { name: string; email: string } }) {
       <div
         role="menu"
         data-open={open || undefined}
-        className="invisible absolute right-0 z-50 mt-2 w-64 origin-top-right scale-95 rounded-xl border border-line bg-surface p-1.5 opacity-0 shadow-xl transition-[opacity,transform,visibility] duration-150 ease-out data-open:visible data-open:scale-100 data-open:opacity-100"
+        className={`invisible absolute z-50 w-64 scale-95 ${placement === "up" ? "bottom-full left-0 mb-2 origin-bottom-left" : "right-0 mt-2 origin-top-right"} rounded-xl border border-line bg-surface p-1.5 opacity-0 shadow-xl transition-[opacity,transform,visibility] duration-150 ease-out data-open:visible data-open:scale-100 data-open:opacity-100`}
       >
         <div className="px-2.5 pt-1.5 pb-2.5">
           <div className="truncate text-sm font-semibold">{user.name || "Your account"}</div>

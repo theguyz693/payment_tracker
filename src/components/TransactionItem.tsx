@@ -5,7 +5,7 @@ import { effectiveStatus } from "@/lib/status";
 import type { ISODate, Transaction } from "@/lib/types";
 import { DirectionBadge, FrequencyTag, StatusBadge } from "./Badges";
 import { ArchiveButton, RestoreButton, RowShell, SettleButton } from "./ItemActions";
-import { Alert, Pencil } from "./icons";
+import { Alert, Pause, Pencil } from "./icons";
 
 export function TransactionItem({
   tx,
@@ -21,12 +21,14 @@ export function TransactionItem({
 }) {
   const status = effectiveStatus(tx, today);
   const overdue = status === "OVERDUE";
-  const open = tx.status === "PENDING";
+  const open = tx.status === "PENDING" && !tx.paused;
   const rail = overdue ? "bg-overdue" : tx.direction === "PAY" ? "bg-pay" : "bg-receive";
   const editHref = `/transactions/${tx.id}/edit`;
 
   let dateLine: React.ReactNode;
-  if (open) {
+  if (tx.paused && tx.status === "PENDING") {
+    dateLine = <span className="text-ink-3">Paused · nothing due until resumed</span>;
+  } else if (open) {
     dateLine = (
       <span className={overdue ? "inline-flex items-center gap-1 font-semibold text-overdue" : "text-ink-2"}>
         {overdue && <Alert width={13} height={13} />}
@@ -64,7 +66,12 @@ export function TransactionItem({
                 {tx.title}
               </Link>
               {variant === "list" && <DirectionBadge direction={tx.direction} />}
-              {variant === "list" && <StatusBadge key={status} status={status} />}
+              {variant === "list" && !tx.paused && <StatusBadge key={status} status={status} />}
+              {tx.paused && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-canvas px-2 py-0.5 text-xs font-semibold text-ink-2">
+                  <Pause width={11} height={11} /> Paused
+                </span>
+              )}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
               <span>{tx.category.name}</span>

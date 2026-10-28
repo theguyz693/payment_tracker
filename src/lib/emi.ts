@@ -147,3 +147,57 @@ export function compareScenarios(principalPaise: number, firstEmiDate: ISODate, 
     };
   });
 }
+
+/** Number of EMI dates (monthly from `firstEmiDate`) on or before `date`. */
+export function instalmentsOnOrBefore(firstEmiDate: ISODate, date: ISODate, max = 1200): number {
+  let n = 0;
+  while (n < max && addMonths(firstEmiDate, n) <= date) n++;
+  return n;
+}
+
+export interface LoanLike {
+  principalPaise: number;
+  annualRateBps: number;
+  tenureMonths: number;
+  firstEmiDate: ISODate;
+  emiPaise: number;
+  paidBeforeTracking: number;
+  prepayments: { date: ISODate; amountPaise: number }[];
+}
+
+export interface LoanStatus {
+  schedule: Schedule;
+  /** Planned schedule without any prepayments (for "interest saved"). */
+  baseline: Schedule;
+  paidInstalments: number;
+  outstandingPaise: number;
+  interestSavedPaise: number;
+  nextEmiDate: ISODate | null;
+  remainingInstalments: number;
+}
+
+/**
+ * Where a loan stands. `trackedPayments` = EMIs marked paid on the linked item.
+ * Prepayments are applied after the last EMI on or before their date.
+ * Illustrative: a lender's schedule may differ (rounding, broken-period interest).
+ */
+export function loanStatus(loan: LoanLike, trackedPayments: number): LoanStatus {
+  const prepayments = loan.prepayments.map((p) => ({
+    afterInstalment: Math.max(1, instalmentsOnOrBefore(loan.firstEmiDate, p.date)),
+    amountPaise: p.amountPaise,
+  }));
+  const base = { principalPaise: loan.principalPaise, annualRateBps: loan.annualRateBps, months: loan.tenureMonths, firstEmiDate: loan.firstEmiDate, emiPaise: loan.emiPaise };
+  const schedule = amortise({ ...base, prepayments });
+  const baseline = amortise(base);
+  const paid = Math.min(schedule.rows.length, loan.paidBeforeTracking + trackedPayments);
+  const next = schedule.rows[paid];
+  return {
+    schedule,
+    baseline,
+    paidInstalments: paid,
+    outstandingPaise: outstandingAfter(schedule, paid),
+    interestSavedPaise: Math.max(0, baseline.totalInterestPaise - schedule.totalInterestPaise),
+    nextEmiDate: next ? next.date : null,
+    remainingInstalments: schedule.rows.length - paid,
+  };
+}

@@ -10,7 +10,8 @@ import { FOCUS_SEARCH_KEY } from "./KeyboardShortcuts";
 const control =
   "rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink transition-[border-color,box-shadow] duration-150 hover:border-ink-3 focus:border-pay focus:outline-none focus:ring-2 focus:ring-pay/20";
 
-const KEYS = ["direction", "status", "category", "from", "to", "sort", "q"] as const;
+// "view" (e.g. recurring) has no control here but is kept when other filters change.
+const KEYS = ["view", "direction", "status", "category", "from", "to", "sort", "q"] as const;
 type FilterState = Record<(typeof KEYS)[number], string>;
 
 function fromParams(params: URLSearchParams): FilterState {

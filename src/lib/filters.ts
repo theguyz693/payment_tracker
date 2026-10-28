@@ -17,6 +17,7 @@ export const STATUS_FILTERS = {
   OVERDUE: "Overdue",
   PAID: "Paid",
   RECEIVED: "Received",
+  PAUSED: "Paused",
   ARCHIVED: "Deleted (archived)",
 } as const;
 type StatusFilter = keyof typeof STATUS_FILTERS;
@@ -28,6 +29,8 @@ export interface Filters {
   from?: ISODate;
   to?: ISODate;
   q?: string;
+  /** Only recurring items. */
+  recurring?: boolean;
   sort: Sort;
 }
 
@@ -50,6 +53,7 @@ export function parseFilters(params: Params): Filters {
     from: from && isISODate(from) ? from : undefined,
     to: to && isISODate(to) ? to : undefined,
     q: one("q")?.toLowerCase(),
+    recurring: one("view") === "recurring" || undefined,
     sort: sort && sort in SORTS ? (sort as Sort) : "due_asc",
   };
 }
@@ -58,7 +62,12 @@ export function applyFilters(items: Transaction[], f: Filters, today: ISODate): 
   const result = items.filter((t) => {
     if (f.status === "ARCHIVED" ? !t.archived : t.archived) return false;
     if (f.direction && t.direction !== f.direction) return false;
-    if (f.status && f.status !== "ARCHIVED" && effectiveStatus(t, today) !== (f.status as Status)) return false;
+    if (f.recurring && t.frequency === "ONE_TIME") return false;
+    if (f.status === "PAUSED") {
+      if (!t.paused) return false;
+    } else if (f.status && f.status !== "ARCHIVED") {
+      if (t.paused || effectiveStatus(t, today) !== (f.status as Status)) return false;
+    }
     if (f.categoryId && t.category.id !== f.categoryId) return false;
     if (f.from && t.dueDate < f.from) return false;
     if (f.to && t.dueDate > f.to) return false;

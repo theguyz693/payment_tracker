@@ -139,7 +139,14 @@ export async function getHistory(userId: string, id: string) {
   if (!_id) return [];
   const doc = await transactionsCollection().findOne({ _id, userId }, { projection: { history: 1 } });
   return (doc?.history ?? [])
-    .map((h, i) => ({ id: String(i), amountPaise: h.amountPaise, dueDate: h.dueDate, settledOn: h.settledOn }))
+    .map((h, i) => ({
+      id: h.entryId ? h.entryId.toHexString() : `idx-${i}`,
+      /** Receipts need the stable id; older entries get one on the next overview load. */
+      entryId: h.entryId ? h.entryId.toHexString() : null,
+      amountPaise: h.amountPaise,
+      dueDate: h.dueDate,
+      settledOn: h.settledOn,
+    }))
     .sort((a, b) => b.settledOn.localeCompare(a.settledOn));
 }
 

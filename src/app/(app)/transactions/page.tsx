@@ -5,6 +5,7 @@ import { SearchIllustration, WalletIllustration } from "@/components/Illustratio
 import { plural } from "@/components/StatCard";
 import { EmptyState, TransactionItem } from "@/components/TransactionItem";
 import { Plus } from "@/components/icons";
+import { Tabs } from "@/components/ui";
 import { applyFilters, parseFilters } from "@/lib/filters";
 import { formatINR } from "@/lib/money";
 import { listCategories, loadUserData } from "@/server/repository";
@@ -28,8 +29,16 @@ export default async function TransactionsPage({
 
   return (
     <div className="space-y-5">
+      <Tabs
+        active={filters.recurring ? "recurring" : "items"}
+        tabs={[
+          { key: "items", label: "All items", href: "/transactions" },
+          { key: "recurring", label: "Recurring", href: "/transactions?view=recurring" },
+          { key: "history", label: "History", href: "/transactions/history" },
+        ]}
+      />
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{filters.recurring ? "Recurring payments" : "Transactions"}</h1>
         <p className="mt-1 text-sm text-ink-2">
           {plural(items.length, "item")}
           {payTotal > 0 && <span className="num ml-3">Pay {formatINR(payTotal)}</span>}
