@@ -127,3 +127,21 @@ export function FormSkeleton() {
     </div>
   );
 }
+
+/** Generic page: title, a row of figures and a few content cards. */
+export function PageSkeleton({ stats = 4, cards = 2 }: { stats?: number; cards?: number }) {
+  return (
+    <div className="space-y-8" role="status" aria-label="Loading">
+      <TitleSkeleton wide />
+      {stats > 0 && <div className="grid grid-cols-2 gap-3 md:grid-cols-4"><StatSkeletons count={stats} /></div>}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {Array.from({ length: cards }, (_, i) => (
+          <div key={i} className="rounded-2xl border border-line bg-surface p-5">
+            <Bar className="h-4 w-40" />
+            <Bar className="mt-4 h-40 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
