@@ -82,7 +82,7 @@ export function parseLedgerFilters(params: Params): LedgerFilters {
   const to = one("to");
   const page = Number(one("page"));
   return {
-    type: type && type in LEDGER_TYPES ? (type as LedgerType) : undefined,
+    type: type && Object.hasOwn(LEDGER_TYPES, type) ? (type as LedgerType) : undefined,
     from: from && isISODate(from) ? from : undefined,
     to: to && isISODate(to) ? to : undefined,
     q: one("q")?.toLowerCase().slice(0, 100),

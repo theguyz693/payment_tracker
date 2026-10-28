@@ -1,5 +1,5 @@
 import { SettingsForm } from "@/components/SettingsForm";
-import { Card, CardTitle, Note, PageHeader } from "@/components/ui";
+import { Card, CardTitle, Note, PageHeader, Tabs } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { formatINR, paiseToInput } from "@/lib/money";
 import { loadFinancialPicture } from "@/server/loaders";
@@ -16,6 +16,13 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      <Tabs
+        active="general"
+        tabs={[
+          { key: "general", label: "General", href: "/settings" },
+          { key: "security", label: "Privacy & security", href: "/settings/security" },
+        ]}
+      />
       <PageHeader title="Settings" description="Preferences that power forecasts and net worth." />
 
       <Card>

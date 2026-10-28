@@ -1,0 +1,5 @@
+# Normalise line endings in the repository (files were a mix of LF and CRLF).
+* text=auto eol=lf
+*.ico binary
+*.png binary
+*.woff2 binary

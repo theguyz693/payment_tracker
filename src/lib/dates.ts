@@ -5,8 +5,12 @@ import type { ISODate } from "./types";
 
 const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Accepted date range. Rejects absurd years that would make schedules meaningless. */
+const MIN_DATE = "1900-01-01";
+const MAX_DATE = "2199-12-31";
+
 export function isISODate(value: string): boolean {
-  if (!ISO_RE.test(value)) return false;
+  if (typeof value !== "string" || !ISO_RE.test(value) || value < MIN_DATE || value > MAX_DATE) return false;
   const d = parse(value);
   return toISO(d) === value; // rejects 2026-02-30 etc.
 }

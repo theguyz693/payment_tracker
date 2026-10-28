@@ -31,7 +31,7 @@ const MAX_CUSTOM_DAYS = 366 * 5;
 
 export function resolvePeriod(params: Params, today: ISODate): Period {
   const raw = one(params, "period");
-  const key: PeriodKey = raw && raw in PERIODS ? (raw as PeriodKey) : "this_month";
+  const key: PeriodKey = raw && Object.hasOwn(PERIODS, raw) ? (raw as PeriodKey) : "this_month";
   const month = monthKey(today);
 
   switch (key) {

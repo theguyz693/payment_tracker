@@ -25,6 +25,7 @@ export function divRound(a: bigint, b: bigint): bigint {
 
 /** "12.3456" with places=4 -> 123456. Rejects more decimals than allowed. */
 export function parseDecimal(input: string, places: number): number | null {
+  if (input.length > 40) return null;
   const cleaned = input.replace(/[₹,\s]/g, "");
   const m = /^(\d+)(?:\.(\d+))?$/.exec(cleaned);
   if (!m) return null;

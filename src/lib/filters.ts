@@ -48,13 +48,13 @@ export function parseFilters(params: Params): Filters {
   const to = one("to");
   return {
     direction: direction === "PAY" || direction === "RECEIVE" ? direction : undefined,
-    status: status && status in STATUS_FILTERS ? (status as StatusFilter) : undefined,
+    status: status && Object.hasOwn(STATUS_FILTERS, status) ? (status as StatusFilter) : undefined,
     categoryId: one("category"),
     from: from && isISODate(from) ? from : undefined,
     to: to && isISODate(to) ? to : undefined,
-    q: one("q")?.toLowerCase(),
+    q: one("q")?.toLowerCase().slice(0, 100),
     recurring: one("view") === "recurring" || undefined,
-    sort: sort && sort in SORTS ? (sort as Sort) : "due_asc",
+    sort: sort && Object.hasOwn(SORTS, sort) ? (sort as Sort) : "due_asc",
   };
 }
 

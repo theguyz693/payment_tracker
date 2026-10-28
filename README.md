@@ -35,11 +35,12 @@ npm run dev                    # http://localhost:3000
 ```
 Open `/signup` and create an account.
 
-**Optional sample data (development only).** This adds demo items to one existing account and refuses to run when `NODE_ENV=production`:
+**Optional sample data (development only).** This adds demo items to one existing account. It refuses to run when `NODE_ENV=production`, and refuses any database whose name doesn't end in `_dev` or `_test`, so it can't touch real data:
 ```bash
-npm run db:seed -- --email you@example.com            # add sample items
-npm run db:seed -- --email you@example.com --replace  # replace that account's items
+MONGODB_DB=payment_tracker_dev npm run db:seed -- --email you@example.com            # add sample items
+MONGODB_DB=payment_tracker_dev npm run db:seed -- --email you@example.com --replace  # replace that account's items
 ```
+Sign up in the app against the same database first (e.g. put `MONGODB_DB="payment_tracker_dev"` in `.env.development.local`).
 
 ## 3. Environment variables
 | Name | Required | Description |
@@ -70,7 +71,9 @@ The app creates its collections and indexes automatically on first use:
 - `/signup` and `/login` use email and password, with a minimum of 8 characters. Sessions last 30 days and are extended once a day while you use the app.
 - **Middleware** (`src/middleware.ts`) sends visitors without a session cookie to `/login`.
 - **Real check:** every page and server action calls `requireUser()` (`src/server/session.ts`), which verifies the session against the database. The user id always comes from the session, never from the request.
-- **Data access:** every query in `src/server/repository.ts` filters by `userId`.
+- **Data access:** every query in `src/server/repository.ts` (and the other repositories) filters by `userId`.
+- **Privacy & security** (Settings): active sessions, sign out other devices, change password, data export, account deletion.
+- Full audit, protections, manual Atlas/Vercel settings and **backup/restore**: [docs/SECURITY.md](docs/SECURITY.md).
 - **Adding email verification or OTP later:** turn on `emailAndPassword.requireEmailVerification` with an email sender, or add Better Auth's `emailOTP` plugin in `src/server/auth.ts`. No data changes are needed.
 
 ## 6. Market data

@@ -76,7 +76,9 @@ export function UserMenu({ user, placement = "down" }: { user: { name: string; e
   async function signOut() {
     setSigningOut(true);
     try {
-      await authClient.signOut();
+      // Better Auth reports failures in the result rather than throwing.
+      const { error } = await authClient.signOut();
+      if (error) throw error;
       router.replace("/login");
       router.refresh();
       toast("Logged out");

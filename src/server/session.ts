@@ -41,3 +41,35 @@ export async function getTimeZone(): Promise<string> {
 export async function getToday(): Promise<string> {
   return today(await getTimeZone());
 }
+
+export interface SessionInfo {
+  id: string;
+  current: boolean;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+}
+
+/**
+ * The signed-in user's active sessions, for the security page.
+ * Only display fields leave the server: session tokens never do.
+ */
+export async function listMySessions(): Promise<SessionInfo[]> {
+  const h = await headers();
+  const [current, sessions] = await Promise.all([getAuth().api.getSession({ headers: h }), getAuth().api.listSessions({ headers: h })]);
+  if (!current) return [];
+  return sessions
+    .filter((s) => s.userId === current.user.id)
+    .map((s) => ({
+      id: s.id,
+      current: s.id === current.session.id,
+      createdAt: new Date(s.createdAt).toISOString(),
+      updatedAt: new Date(s.updatedAt).toISOString(),
+      expiresAt: new Date(s.expiresAt).toISOString(),
+      userAgent: s.userAgent ?? null,
+      ipAddress: s.ipAddress ?? null,
+    }))
+    .sort((a, b) => Number(b.current) - Number(a.current) || b.updatedAt.localeCompare(a.updatedAt));
+}

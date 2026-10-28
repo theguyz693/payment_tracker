@@ -1,16 +1,21 @@
 // DEVELOPMENT ONLY: loads realistic sample data into ONE existing account.
 //
-//   npm run db:seed -- --local                            (login turned off: adds to the local user)
-//   npm run db:seed -- --email you@example.com            (adds sample items)
-//   npm run db:seed -- --email you@example.com --replace  (deletes that account's items first)
+//   MONGODB_DB=payment_tracker_dev npm run db:seed -- --email you@example.com            (adds sample items)
+//   MONGODB_DB=payment_tracker_dev npm run db:seed -- --email you@example.com --replace  (deletes that account's items first)
 //
-// Refuses to run when NODE_ENV=production. Sign up in the app first, then run
-// this with the same email. Never touches any other account.
+// Safety:
+// - Refuses to run when NODE_ENV=production.
+// - Refuses any database whose name doesn't end in "_dev" or "_test", so it
+//   can't touch the real data even though .env.local points at the real cluster.
+//   (For a deliberately chosen other database: --allow-db=<exact name>.)
+// - Only ever touches the one account named by --email.
+// Sign up in the app first (against the same database), then run this with that email.
 // Dates are relative to today so the dashboard always has something to show.
 
 import { MongoClient, ObjectId } from "mongodb";
 import { addDays, addMonths, today as getToday } from "../src/lib/dates";
 import { categoryId, type Direction, type Frequency } from "../src/lib/types";
+import { seedAllowed } from "./seed-guard";
 
 try {
   process.loadEnvFile?.(".env.local");
@@ -105,28 +110,31 @@ async function main() {
     throw new Error("Refusing to seed: NODE_ENV is production. The seed is for development only.");
   }
   const args = process.argv.slice(2);
-  const local = args.includes("--local");
-  const email = local ? "local user" : args[args.indexOf("--email") + 1];
-  if (!local && (!args.includes("--email") || !email || email.startsWith("--"))) {
-    throw new Error("Usage: npm run db:seed -- --email you@example.com [--replace]   (or --local while login is off)");
+  const email = args[args.indexOf("--email") + 1];
+  if (!args.includes("--email") || !email || email.startsWith("--")) {
+    throw new Error("Usage: MONGODB_DB=payment_tracker_dev npm run db:seed -- --email you@example.com [--replace]");
   }
   const uri = process.env.MONGODB_URI;
   if (!uri) throw new Error("MONGODB_URI is not set (add it to .env.local).");
+  const dbName = process.env.MONGODB_DB || "payment_tracker";
+  if (!seedAllowed(dbName, args)) {
+    throw new Error(
+      `Refusing to seed database "${dbName}": it doesn't look like a development database.\n` +
+        `Use one ending in _dev or _test, e.g. MONGODB_DB=payment_tracker_dev npm run db:seed -- --email ${email}`,
+    );
+  }
 
   const client = new MongoClient(uri);
   try {
-    const db = client.db(process.env.MONGODB_DB || "payment_tracker");
-    let userId = "local-user"; // AUTH DISABLED mode uses this fixed id (see src/server/session.ts)
-    if (!local) {
-      const user = await db.collection("user").findOne({ email: email.toLowerCase() });
-      if (!user) throw new Error(`No account with email ${email}. Sign up in the app first.`);
-      userId = String(user._id);
-    }
+    const db = client.db(dbName);
+    const user = await db.collection("user").findOne({ email: email.toLowerCase() });
+    if (!user) throw new Error(`No account with email ${email} in "${dbName}". Sign up in the app first (against this database).`);
+    const userId = String(user._id);
     const col = db.collection("transactions");
 
     if (args.includes("--replace")) {
       const { deletedCount } = await col.deleteMany({ userId });
-      console.log(`Removed ${deletedCount} existing items for ${email}.`);
+      console.log(`Removed ${deletedCount} existing items for ${email} in "${dbName}".`);
     }
 
     const now = new Date();

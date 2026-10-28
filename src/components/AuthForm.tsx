@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { safeNextPath } from "@/lib/redirects";
 import { Alert, Eye, EyeOff } from "./icons";
 import { useToast } from "./Toast";
 
@@ -12,10 +13,6 @@ type Errors = Partial<Record<"name" | "email" | "password" | "form", string>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Only allow same-site relative redirects after login. */
-function safeNext(next?: string): string {
-  return next && /^\/(?!\/)/.test(next) && !next.startsWith("/login") && !next.startsWith("/signup") ? next : "/dashboard";
-}
 
 function friendlyError(err: { status?: number; code?: string; message?: string }, mode: Mode): string {
   const code = err.code ?? "";
@@ -63,7 +60,7 @@ export function AuthForm({ mode, next }: { mode: Mode; next?: string }) {
         return;
       }
       if (signup) toast(`Welcome, ${name.trim().split(" ")[0]}!`);
-      router.replace(safeNext(next));
+      router.replace(safeNextPath(next));
       router.refresh();
     } catch {
       setErrors({ form: "Couldn't reach the server. Check your connection and try again." });
