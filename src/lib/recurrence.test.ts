@@ -3,7 +3,7 @@ import { addMonths, today } from "./dates";
 import { describeRecurrence, nextOccurrenceAfter, settle } from "./recurrence";
 import { effectiveStatus } from "./status";
 import { dashboardSummary, monthlySummary } from "./summary";
-import type { Settlement, Transaction } from "./types";
+import { st, tx } from "@/test/fixtures";
 
 describe("addMonths", () => {
   it("clamps to month end", () => {
@@ -64,41 +64,6 @@ describe("describeRecurrence", () => {
 });
 
 // ---- Status & summaries ----
-
-const cat = { id: "c", name: "Rent", direction: "PAY" as const };
-function tx(p: Partial<Transaction>): Transaction {
-  return {
-    id: Math.random().toString(36),
-    title: "x",
-    amountPaise: 100_00,
-    direction: "PAY",
-    frequency: "ONE_TIME",
-    category: cat,
-    counterparty: null,
-    notes: null,
-    startDate: "2026-10-01",
-    anchorDate: "2026-10-01",
-    dueDate: "2026-10-06",
-    endDate: null,
-    status: "PENDING",
-    archived: false,
-    lastSettledOn: null,
-    ...p,
-  };
-}
-function st(p: Partial<Settlement>): Settlement {
-  return {
-    id: "s",
-    transactionId: "t",
-    title: "x",
-    direction: "PAY",
-    categoryName: "Rent",
-    amountPaise: 100_00,
-    dueDate: "2026-10-01",
-    settledOn: "2026-10-01",
-    ...p,
-  };
-}
 
 describe("effectiveStatus", () => {
   it("derives OVERDUE from the date", () => {

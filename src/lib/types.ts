@@ -1,5 +1,5 @@
 // Domain types shared by UI, business logic and data access.
-// Kept free of Prisma imports so the UI and logic don't depend on the DB layer.
+// Kept free of database imports so the UI and logic don't depend on the DB layer.
 
 export const DIRECTIONS = ["PAY", "RECEIVE"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
@@ -39,14 +39,30 @@ export interface Transaction {
   status: StoredStatus;
   archived: boolean;
   lastSettledOn: ISODate | null;
+  /** Paused recurring items have no upcoming occurrences and are never overdue. */
+  paused: boolean;
+  /** Amount edits, oldest first (price-change history). */
+  amountChanges: AmountChange[];
+  /** Loan whose EMI this item tracks (see Loans). */
+  loanId: string | null;
+}
+
+export interface AmountChange {
+  fromPaise: number;
+  toPaise: number;
+  changedOn: ISODate;
 }
 
 export interface Settlement {
+  /** Stable id of the history entry (used for receipts and the ledger). */
   id: string;
   transactionId: string;
   title: string;
   direction: Direction;
+  categoryId: string;
   categoryName: string;
+  counterparty: string | null;
+  notes: string | null;
   amountPaise: number;
   dueDate: ISODate;
   settledOn: ISODate;

@@ -108,3 +108,70 @@ export function describeRecurrence(frequency: Frequency, anchor: ISODate): strin
       return `Repeats every year on ${formatDate(anchor)}`;
   }
 }
+
+// ---- Expansion (previews, forecasts, commitments) ----
+
+export interface ScheduleInput {
+  frequency: Frequency;
+  anchorDate: ISODate;
+  /** Next unsettled occurrence (may be in the past = overdue). */
+  dueDate: ISODate;
+  endDate: ISODate | null;
+}
+
+/**
+ * Unsettled occurrences of an open item with from <= date <= to, starting at
+ * its current due date. Settled occurrences are never repeated because the
+ * expansion starts at `dueDate` (everything before it is in history).
+ */
+export function occurrencesBetween(item: ScheduleInput, from: ISODate, to: ISODate, limit = 1000): ISODate[] {
+  const out: ISODate[] = [];
+  if (item.frequency === "ONE_TIME") {
+    if (item.dueDate >= from && item.dueDate <= to) out.push(item.dueDate);
+    return out;
+  }
+  let date: ISODate | null = item.dueDate;
+  // Skip forward to `from` without stepping one by one from the anchor.
+  if (date < from) {
+    const prev = addDays(from, -1);
+    date = nextOccurrenceAfter(item.anchorDate, item.frequency, prev > date ? prev : date);
+  }
+  while (date && date <= to && (!item.endDate || date <= item.endDate) && out.length < limit) {
+    out.push(date);
+    date = nextOccurrenceAfter(item.anchorDate, item.frequency, date);
+  }
+  return out;
+}
+
+/** Number of occurrences per year, for annual/monthly cost estimates. */
+export const PER_YEAR: Record<Frequency, number> = {
+  ONE_TIME: 0,
+  DAILY: 365,
+  WEEKLY: 52,
+  MONTHLY: 12,
+  QUARTERLY: 4,
+  YEARLY: 1,
+};
+
+/** Annual cost of a recurring amount (0 for one-time). */
+export function annualCost(amountPaise: number, frequency: Frequency): number {
+  return amountPaise * PER_YEAR[frequency];
+}
+
+/** Monthly equivalent, rounded to the paise. */
+export function monthlyCost(amountPaise: number, frequency: Frequency): number {
+  return Math.round(annualCost(amountPaise, frequency) / 12);
+}
+
+/**
+ * Where a paused item resumes. Occurrences missed while paused are skipped:
+ * the item continues at the first occurrence on or after `today`.
+ * Returns null when no occurrence remains before the end date.
+ */
+export function resumeDueDate(item: ScheduleInput, today: ISODate): ISODate | null {
+  if (item.dueDate >= today) return item.dueDate;
+  if (item.frequency === "ONE_TIME") return item.dueDate;
+  const next = nextOccurrenceAfter(item.anchorDate, item.frequency, addDays(today, -1));
+  if (!next || (item.endDate && next > item.endDate)) return null;
+  return next;
+}

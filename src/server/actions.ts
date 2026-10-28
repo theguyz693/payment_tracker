@@ -8,18 +8,12 @@
 
 import { revalidatePath } from "next/cache";
 import { formatDate, isISODate } from "@/lib/dates";
-import { transactionInputSchema, type FieldErrors } from "@/lib/validation";
+import { transactionInputSchema } from "@/lib/validation";
+import { GENERIC_ERROR, requestIdFrom, safeReturnPath, toFieldErrors, type FormState } from "./form";
 import * as repo from "./repository";
 import { getToday, requireUser } from "./session";
 
-export interface FormState {
-  ok?: boolean;
-  errors?: FieldErrors;
-  message?: string;
-  redirectTo?: string;
-}
-
-const GENERIC_ERROR = "Something went wrong. Please try again.";
+export type { FormState } from "./form";
 
 function parseForm(formData: FormData) {
   const get = (k: string) => {
@@ -40,20 +34,6 @@ function parseForm(formData: FormData) {
   });
 }
 
-function toFieldErrors(error: import("zod").ZodError): FieldErrors {
-  const errors: FieldErrors = {};
-  for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "form");
-    errors[key] ??= issue.message;
-  }
-  return errors;
-}
-
-function safeReturnPath(value: FormDataEntryValue | null): string {
-  // Only same-site relative paths (blocks "//evil.com" open redirects).
-  return typeof value === "string" && /^\/(?!\/)[\w\-/?=&.%]*$/.test(value) ? value : "/transactions";
-}
-
 export async function saveTransaction(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const parsed = parseForm(formData);
@@ -62,8 +42,8 @@ export async function saveTransaction(_prev: FormState, formData: FormData): Pro
   const id = formData.get("id");
   const isEdit = typeof id === "string" && id.length > 0;
   try {
-    if (isEdit) await repo.updateTransaction(user.id, id, parsed.data);
-    else await repo.createTransaction(user.id, parsed.data);
+    if (isEdit) await repo.updateTransaction(user.id, id, parsed.data, await getToday());
+    else await repo.createTransaction(user.id, parsed.data, { requestId: requestIdFrom(formData) });
   } catch (e) {
     if (e instanceof repo.UserError) return { message: e.message };
     console.error("[saveTransaction]", e);
@@ -73,7 +53,7 @@ export async function saveTransaction(_prev: FormState, formData: FormData): Pro
   return {
     ok: true,
     message: isEdit ? `${parsed.data.title} saved.` : `${parsed.data.title} added.`,
-    redirectTo: safeReturnPath(formData.get("returnTo")),
+    redirectTo: safeReturnPath(formData.get("returnTo"), "/transactions"),
   };
 }
 
@@ -131,5 +111,33 @@ export async function restoreAction(id: unknown): Promise<{ ok: boolean }> {
   } catch (e) {
     console.error("[restoreAction]", e);
     return { ok: false };
+  }
+}
+
+export async function pauseAction(id: unknown): Promise<{ ok: boolean; message: string }> {
+  const user = await requireUser();
+  if (typeof id !== "string") return { ok: false, message: "That item couldn't be paused." };
+  try {
+    const ok = await repo.pauseTransaction(user.id, id);
+    if (ok) revalidatePath("/", "layout");
+    return ok ? { ok, message: "Paused. It won't show as due until you resume it." } : { ok, message: "Only active recurring items can be paused." };
+  } catch (e) {
+    console.error("[pauseAction]", e);
+    return { ok: false, message: GENERIC_ERROR };
+  }
+}
+
+export async function resumeAction(id: unknown): Promise<{ ok: boolean; message: string }> {
+  const user = await requireUser();
+  if (typeof id !== "string") return { ok: false, message: "That item couldn't be resumed." };
+  try {
+    const today = await getToday();
+    const due = await repo.resumeTransaction(user.id, id, today);
+    revalidatePath("/", "layout");
+    return { ok: true, message: `Resumed. Next due ${formatDate(due, today)}.` };
+  } catch (e) {
+    if (e instanceof repo.UserError) return { ok: false, message: e.message };
+    console.error("[resumeAction]", e);
+    return { ok: false, message: GENERIC_ERROR };
   }
 }
