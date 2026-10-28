@@ -317,7 +317,7 @@ function Goals() {
         return (
           <li key={g.name}>
             <div className="flex items-baseline justify-between gap-4">
-              <span className="font-display text-2xl text-ink">{g.name}</span>
+              <span className="font-display font-semibold tracking-[-0.02em] text-2xl text-ink">{g.name}</span>
               <span className="font-mono text-sm text-ink-2">{pct}%</span>
             </div>
             <div className="mt-3 h-[6px] overflow-hidden rounded-full bg-white/[0.06]">

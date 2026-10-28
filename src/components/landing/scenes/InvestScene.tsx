@@ -40,15 +40,15 @@ export function InvestScene() {
       <div className="grid gap-8 md:grid-cols-3">
         <div>
           <div className="font-mono text-[10px] tracking-[0.2em] text-ink-3 uppercase">Put in</div>
-          <div className="num mt-2 font-display text-5xl text-ink">{formatINR(invested * 100)}</div>
+          <div className="num mt-2 font-display text-4xl font-semibold tracking-[-0.04em] sm:text-5xl text-ink">{formatINR(invested * 100)}</div>
         </div>
         <div>
           <div className="font-mono text-[10px] tracking-[0.2em] text-ink-3 uppercase">Worth now</div>
-          <div className="num mt-2 font-display text-5xl text-mint">{formatINR(last * 100)}</div>
+          <div className="num mt-2 font-display text-4xl font-semibold tracking-[-0.04em] sm:text-5xl text-mint">{formatINR(last * 100)}</div>
         </div>
         <div>
           <div className="font-mono text-[10px] tracking-[0.2em] text-ink-3 uppercase">Difference</div>
-          <div className="num mt-2 font-display text-5xl text-brass">+{formatINR(gain * 100)}</div>
+          <div className="num mt-2 font-display text-4xl font-semibold tracking-[-0.04em] sm:text-5xl text-brass">+{formatINR(gain * 100)}</div>
         </div>
       </div>
 

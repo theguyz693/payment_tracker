@@ -73,7 +73,7 @@
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Landing page ("The Instrument"): always-dark studio palette. */
-  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-display: "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --color-studio: #0a0a0b;
   --color-paper: #ece6da;
   --color-brass: #c9a46b;
@@ -416,6 +416,9 @@ html:has(.landing) {
 }
 .landing section[id] {
   scroll-margin-top: 4.5rem;
+}
+.landing em {
+  font-style: normal;
 }
 .landing ::selection {
   background: rgb(201 164 107 / 0.35);

@@ -47,7 +47,7 @@ export function CalendarScene() {
     <div className="grid items-start gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
       <div data-reveal>
         <div className="mb-4 flex items-baseline justify-between">
-          <span className="font-display text-3xl text-ink">November</span>
+          <span className="font-display font-semibold tracking-[-0.02em] text-3xl text-ink">November</span>
           <span className="font-mono text-xs text-ink-3">2026 · illustrative</span>
         </div>
         <div className="grid grid-cols-7 gap-px overflow-hidden rounded-2xl border border-line bg-line">

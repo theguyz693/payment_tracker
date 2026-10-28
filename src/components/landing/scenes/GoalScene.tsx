@@ -55,7 +55,7 @@ export function GoalScene() {
       </div>
 
       <div>
-        <div data-reveal className="font-display text-[clamp(2.6rem,6vw,4.5rem)] leading-none text-ink">
+        <div data-reveal className="font-display text-[clamp(2.4rem,5.5vw,4rem)] leading-none font-semibold tracking-[-0.04em] text-ink">
           <span className="num">{formatINR(saved)}</span>
         </div>
         <p data-reveal className="mt-3 font-mono text-sm text-ink-3" aria-live="polite">

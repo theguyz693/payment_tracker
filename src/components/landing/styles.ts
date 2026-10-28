@@ -6,10 +6,10 @@ export const btnPaper =
 export const btnGhost =
   "press inline-flex h-12 items-center justify-center rounded-full border border-line-strong px-6 text-[15px] font-semibold text-ink transition-colors duration-300 hover:border-ink-3 hover:bg-white/[0.04] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brass";
 
-/** Small uppercase mono label used as figure captions and eyebrows. */
+/** Small uppercase mono label (readout captions). */
 export const eyebrow = "font-mono text-[11px] tracking-[0.22em] uppercase";
 
-/** Large editorial serif headline. */
-export const display = "font-display leading-[0.95] tracking-[-0.02em] text-ink";
+/** Large section headline. */
+export const display = "font-display leading-[1.02] font-semibold tracking-[-0.04em] text-ink";
 
 export const d = (n: number) => ({ "--d": n }) as React.CSSProperties;

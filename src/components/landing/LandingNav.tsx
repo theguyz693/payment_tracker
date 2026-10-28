@@ -36,7 +36,7 @@ export function LandingNav() {
       <div className="mx-auto flex h-16 max-w-[88rem] items-center gap-6 px-5 sm:h-[4.5rem] sm:px-8">
         <Link href="/" className="press flex min-w-0 items-center gap-2 text-ink" onClick={() => setOpen(false)} aria-label="Payment Tracker, home">
           <InstrumentMark className="size-7" />
-          <span className="font-display text-[1.25rem] leading-none tracking-[-0.01em] whitespace-nowrap sm:text-[1.45rem]">Payment Tracker</span>
+          <span className="text-[15px] leading-none font-semibold tracking-[-0.01em] whitespace-nowrap sm:text-base">Payment Tracker</span>
         </Link>
 
         <nav className="ml-auto hidden items-center gap-1 md:flex" aria-label="Main">
@@ -90,7 +90,7 @@ export function LandingNav() {
                 href={l.href}
                 tabIndex={open ? 0 : -1}
                 onClick={() => setOpen(false)}
-                className="border-b border-line py-4 font-display text-3xl text-ink"
+                className="border-b border-line py-4 text-2xl font-semibold tracking-[-0.02em] text-ink"
               >
                 {l.label}
               </a>

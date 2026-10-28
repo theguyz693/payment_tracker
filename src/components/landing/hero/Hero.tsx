@@ -14,11 +14,8 @@ export function Hero() {
 
         <div className="relative mx-auto flex min-h-svh max-w-[88rem] flex-col justify-end px-5 pt-28 pb-10 sm:px-8 lg:h-svh lg:justify-center lg:pt-16 lg:pb-16">
           <div className="hero-copy max-w-[46rem]">
-            <p className="hero-in font-mono text-[11px] tracking-[0.22em] text-brass uppercase" style={d(0)}>
-              Fig. 01 — A personal finance instrument
-            </p>
             <h1
-              className="hero-in mt-5 font-display text-[clamp(3.4rem,10.5vw,9.75rem)] leading-[0.86] tracking-[-0.025em] text-ink"
+              className="hero-in font-display text-[clamp(3rem,8.6vw,8rem)] leading-[0.95] font-semibold tracking-[-0.045em] text-ink"
               style={d(1)}
             >
               Every rupee,
@@ -43,8 +40,7 @@ export function Hero() {
           </div>
 
           <div className="hero-caption pointer-events-none absolute right-8 bottom-16 hidden max-w-[24rem] text-right lg:block">
-            <p className="font-mono text-[11px] tracking-[0.22em] text-mint uppercase">Fig. 02 — Aligned</p>
-            <p className="mt-3 font-display text-3xl leading-tight text-ink">Payments, receivables, loans, investments and goals. One axis.</p>
+            <p className="font-display text-2xl leading-snug font-semibold tracking-[-0.02em] text-ink">Payments, receivables, loans, investments and goals. One axis.</p>
           </div>
 
           <a
