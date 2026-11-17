@@ -11,5 +11,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts"],
+    // Real-MongoDB tests run separately: npm run test:integration
+    exclude: ["src/**/*.it.test.ts", "node_modules/**"],
   },
 });

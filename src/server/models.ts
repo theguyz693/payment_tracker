@@ -262,7 +262,7 @@ export interface IntegrationEventDoc {
   maxAttempts: number;
   lastError: { category: string; message: string } | null;
   outcome: { code: string; message: string } | null;
-  linked: { kind: "transaction" | "investmentTxn" | "paymentRequest" | "mandateAttempt"; id: string } | null;
+  linked: { kind: "transaction" | "holding" | "paymentRequest" | "mandateAttempt"; id: string } | null;
   /** Payment status for payment events (SUCCESS / PENDING / FAILED), kept current by status updates. */
   paymentStatus: "SUCCESS" | "PENDING" | "FAILED" | null;
   attempts: EventAttempt[];

@@ -9,6 +9,8 @@ import { contentSecurityPolicy } from "./lib/csp";
 
 // "/" is the public landing page (it sends signed-in users on to /dashboard).
 const PUBLIC_PATHS = ["/", "/login", "/signup", "/privacy", "/terms"];
+// Machine-to-machine endpoints authenticate themselves (HMAC signature / cron secret).
+const PUBLIC_PREFIXES = ["/api/integrations/webhook/", "/api/cron/"];
 
 // Better Auth's session cookie (prefixed with __Secure- on HTTPS).
 const SESSION_COOKIES = ["better-auth.session_token", "__Secure-better-auth.session_token"];
@@ -16,7 +18,8 @@ const SESSION_COOKIES = ["better-auth.session_token", "__Secure-better-auth.sess
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  if (!PUBLIC_PATHS.includes(pathname) && !SESSION_COOKIES.some((name) => request.cookies.has(name))) {
+  const isPublic = PUBLIC_PATHS.includes(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  if (!isPublic && !SESSION_COOKIES.some((name) => request.cookies.has(name))) {
     const url = new URL("/login", request.url);
     url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);

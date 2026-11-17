@@ -8,7 +8,7 @@
 
 import { z } from "zod";
 import { isISODate } from "../dates";
-import { parseDecimal } from "../decimal";
+import { parseDecimal, valuePaise } from "../decimal";
 import { MAX_AMOUNT_PAISE, parseRupees } from "../money";
 import { NO_DEMO, type DemoControls, type EventType, type NormalizedEvent, type PaymentStatus, type ProviderId } from "./types";
 
@@ -216,8 +216,8 @@ const groww: ProviderAdapter = {
     if (feePaise === null) issues.push("order.charges: must be an amount with at most 2 decimals");
     if (o.sip_date && (o.transaction_type !== "BUY" || o.instrument.segment !== "MF")) issues.push("order.sip_date: only for mutual fund purchases");
     if (issues.length) throw new AdapterError("Invalid Groww Simulator payload", issues);
-    // Gross value in paise, rounded half up (price4 is 1/10,000 ₹, qty is 1e-6 units).
-    const amountPaise = Number((BigInt(qtyMicro!) * BigInt(price4!) + 5_000_000n) / 10_000_000n);
+    // Gross value in paise, using the same rounding as manually entered trades.
+    const amountPaise = valuePaise(qtyMicro!, price4!);
     if (amountPaise <= 0 || amountPaise > MAX_AMOUNT_PAISE) throw new AdapterError("Invalid Groww Simulator payload", ["order: value is out of range"]);
     return base(
       "groww_sim",
