@@ -225,3 +225,14 @@ export const Wallet = (p: P) => (
     <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
   </svg>
 );
+export const Plug = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M12 22v-5M9 8V2M15 8V2" />
+    <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+  </svg>
+);
+export const Activity = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+  </svg>
+);

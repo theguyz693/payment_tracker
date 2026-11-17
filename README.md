@@ -13,6 +13,7 @@ A personal finance command centre: payments and money you're owed, cash flow, sa
 | **Investments** | Mutual funds/SIPs (daily AMFI NAVs), stocks/ETFs, gold. FIFO lots, partial sales, realised/unrealised gains, XIRR. |
 | **Analytics** | Income vs expenses, net cash flow, category breakdown and trends, largest expenses, year-to-date comparison, allocation, cash trend. |
 | **Receipts** | Receipt-printer animation for any recorded payment, and a clearly labelled SAMPLE bill generator. |
+| **Integrations Hub** | **Simulated** providers (Google Pay, PhonePe, Groww, Autopay and Payment Request simulators) send signed events through one reliable pipeline: validation, de-duplication, transactional processing, retries and crash recovery. Includes payment requests, autopay mandates, investment imports, an event console and monitoring. No real accounts or money. See [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). |
 | **Settings** | Starting cash balance (powers net worth and the projected balance). |
 
 How each number is defined (cash flow vs outstanding vs projections, what counts as spending, how returns are calculated) is written down in [docs/ROADMAP.md](docs/ROADMAP.md#2-financial-definitions-the-consistency-contract).
@@ -52,6 +53,8 @@ Sign up in the app against the same database first (e.g. put `MONGODB_DB="paymen
 | `DEFAULT_TIMEZONE` | no | Timezone used for "today" until the browser reports one. Default: `Asia/Kolkata`. |
 | `MONGODB_TRANSACTIONS` | no | Set to `false` only when using a local standalone `mongod`. Leave it unset for Atlas. |
 | `ALPHA_VANTAGE_API_KEY` | no | Delayed stock/ETF quotes (see *Market data*). Without it, stock prices are entered manually. |
+| `INTEGRATIONS_WEBHOOK_SECRET` | no | HMAC secret for simulated provider webhooks (16+ characters). Derived from `BETTER_AUTH_SECRET` when unset. |
+| `CRON_SECRET` | no | Enables the scheduled retry/recovery worker (`/api/cron/integrations`, see `vercel.json`). Without it the route refuses to run. |
 
 Never commit `.env.local`; `.gitignore` already excludes it.
 
@@ -90,7 +93,8 @@ Every price shows its source and as-of date, and is flagged "stale" after 5 days
 npm run dev        # dev server
 npm run build      # production build
 npm start          # run the production build
-npm test           # unit tests (recurrence, totals, goals, EMI, portfolio, XIRR, forecast, ledger, receipts, user isolation)
+npm test           # unit tests (recurrence, totals, goals, EMI, portfolio, XIRR, forecast, ledger, receipts, user isolation, adapters, signatures)
+npm run test:integration  # real-MongoDB tests: idempotency, races, duplicates, retries, recovery (throwaway *_test databases)
 npm run lint
 npm run typecheck
 ```

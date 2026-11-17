@@ -22,6 +22,12 @@ Audit date: 2026-10-28. This records what protects the app, what was changed, th
 | Errors | Users see generic messages (or ones written for them). Details go to server logs only. | actions, `src/app/(app)/error.tsx` |
 | Secrets | Only server code reads env vars. Nothing uses `NEXT_PUBLIC_`. `.env*` is git-ignored, and the git history contains no credentials. Market data is fetched server-side, so the Alpha Vantage key never reaches the browser. | — |
 | Dev seed | Refuses `NODE_ENV=production`, and refuses any database not named `*_dev` / `*_test` unless named explicitly with `--allow-db=`. | `db/seed.ts`, `db/seed-guard.ts` |
+| App rate limiting (GateKeeper) | Every write action and export is rate-limited per user in MongoDB (fixed windows, TTL). Financial writes fail closed if the limiter's database is unreachable; read-only reporting fails open. Webhooks are limited per (hashed) IP. Rejections are kept 30 days for monitoring. | `src/server/ratelimit.ts`, `src/server/guard.ts` |
+| Idempotency | Transaction creation and payment-request decisions use persistent idempotency keys (payload-hashed, leased, TTL); provider events are unique per (user, provider, event id). | `src/server/idempotency.ts`, `docs/INTEGRATIONS.md` |
+| Optimistic concurrency | Edits are refused if the item changed since it was opened, so a stale edit can't undo a settlement. Concurrent investment sells are serialised in a transaction. | `src/server/repository.ts`, `src/server/investments-repo.ts` |
+| Webhooks | `/api/integrations/webhook/*` needs an HMAC-SHA256 signature over timestamp + body (constant-time compare, ±5 min window), a known provider and a connected demo account; body ≤ 16 KB. All providers are simulated. | `src/server/integrations/signature.ts`, `pipeline.ts` |
+| Cron | `/api/cron/integrations` requires `Authorization: Bearer $CRON_SECRET` and refuses to run when it isn't configured. | `src/app/api/cron/integrations/route.ts` |
+| Structured logs | JSON lines with request id, hashed user id, outcome, duration and error category; sensitive-looking keys are dropped. | `src/server/log.ts` |
 | Privacy | Settings → Privacy & security has active sessions, sign out other devices, change password (signs out other devices), data export (JSON plus CSV per type), and account deletion. Deletion needs the password and removes all app data, then the user, credentials and sessions. | `src/app/(app)/settings/security` |
 
 ## 2. What this audit changed
@@ -108,7 +114,7 @@ Users can also download their own data from Settings → Privacy & security.
 
 - **No email verification or password reset.** A user who forgets their password can't recover the account without help from you, editing the database.
 - **No two-factor authentication.** Better Auth's `twoFactor` plugin can add TOTP later.
-- **Server actions aren't rate-limited**, apart from authentication. A signed-in user could spam their own data. Writes are bounded and per-user, but there's no per-user quota.
+- **App rate limits use fixed windows.** A burst straddling a window boundary can briefly reach twice the limit.
 - **`style-src 'unsafe-inline'`** stays, because the chart and animation libraries set inline styles. Script injection is still blocked.
 - **Market data:** AMFI and Alpha Vantage responses are parsed defensively, but they're third parties. A wrong upstream price would show as a wrong valuation, with its source and date displayed.
 - **Atlas network access** is open to all IPs on the free tier (see above).

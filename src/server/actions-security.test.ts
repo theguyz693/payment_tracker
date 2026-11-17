@@ -72,6 +72,7 @@ vi.mock("./investments-repo", () => ({
 const actions = await import("./actions");
 const finActions = await import("./finance-actions");
 const invActions = await import("./invest-actions");
+const hub = await import("./integrations/actions");
 
 function form(fields: Record<string, string>): FormData {
   const fd = new FormData();
@@ -110,6 +111,19 @@ describe("unauthenticated callers", () => {
       invActions.archiveHoldingAction(OTHER_ID),
       invActions.deleteInvTxnAction(OTHER_ID),
       invActions.searchSchemesAction("nifty"),
+      hub.connectProviderAction("gpay_sim", true),
+      hub.simulateUpiAction({}, form({ provider: "gpay_sim" })),
+      hub.resolvePaymentAction(OTHER_ID, "SUCCESS"),
+      hub.simulateRequestAction({}, form({})),
+      hub.decideRequestAction(OTHER_ID, "ACCEPT", "some-key-123"),
+      hub.createMandateAction({}, form({})),
+      hub.mandateStatusAction(OTHER_ID, "PAUSED"),
+      hub.runMandateAttemptAction({}, form({ mandateId: OTHER_ID, outcome: "SUCCESS" })),
+      hub.resolveAttemptAction(OTHER_ID, "SUCCESS"),
+      hub.simulateTradeAction({}, form({})),
+      hub.retryEventAction(OTHER_ID),
+      hub.resendEventAction(OTHER_ID),
+      hub.runWorkerAction(),
     ];
     for (const a of attempts) await expect(a).rejects.toBeInstanceOf(RedirectError);
     expect(repoCalls).toEqual([]);

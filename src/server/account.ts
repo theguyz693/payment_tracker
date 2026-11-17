@@ -3,7 +3,22 @@
 // after Better Auth has verified the session and the password.
 
 import "server-only";
-import { goalsCollection, holdingsCollection, invTxnsCollection, loansCollection, settingsCollection, transactionsCollection } from "./models";
+import {
+  attemptsCollection,
+  auditCollection,
+  connectionsCollection,
+  eventsCollection,
+  goalsCollection,
+  holdingsCollection,
+  idempotencyCollection,
+  invTxnsCollection,
+  loansCollection,
+  mandatesCollection,
+  paymentRequestsCollection,
+  rejectionsCollection,
+  settingsCollection,
+  transactionsCollection,
+} from "./models";
 
 /** Delete all app data for one user. Auth data (user, account, session) is removed by Better Auth. */
 export async function deleteAllUserData(userId: string): Promise<Record<string, number>> {
@@ -17,6 +32,17 @@ export async function deleteAllUserData(userId: string): Promise<Record<string, 
     invTxnsCollection().deleteMany(filter),
     settingsCollection().deleteMany(filter),
   ]);
+  // Integrations Hub data (simulated providers), idempotency records and logs.
+  const [integrationEvents, integrationConnections, paymentRequests, mandates, mandateAttempts, auditLog, idempotencyKeys, rejections] = await Promise.all([
+    eventsCollection().deleteMany(filter),
+    connectionsCollection().deleteMany(filter),
+    paymentRequestsCollection().deleteMany(filter),
+    mandatesCollection().deleteMany(filter),
+    attemptsCollection().deleteMany(filter),
+    auditCollection().deleteMany(filter),
+    idempotencyCollection().deleteMany(filter),
+    rejectionsCollection().deleteMany(filter),
+  ]);
   return {
     transactions: transactions.deletedCount,
     goals: goals.deletedCount,
@@ -24,5 +50,13 @@ export async function deleteAllUserData(userId: string): Promise<Record<string, 
     holdings: holdings.deletedCount,
     investmentTxns: investmentTxns.deletedCount,
     userSettings: userSettings.deletedCount,
+    integrationEvents: integrationEvents.deletedCount,
+    integrationConnections: integrationConnections.deletedCount,
+    paymentRequests: paymentRequests.deletedCount,
+    mandates: mandates.deletedCount,
+    mandateAttempts: mandateAttempts.deletedCount,
+    auditLog: auditLog.deletedCount,
+    idempotencyKeys: idempotencyKeys.deletedCount,
+    gatekeeperRejections: rejections.deletedCount,
   };
 }

@@ -13,6 +13,14 @@ const cols = {
   holdings: new MemoryCollection(),
   investmentTxns: new MemoryCollection(),
   userSettings: new MemoryCollection(),
+  integrationEvents: new MemoryCollection(),
+  integrationConnections: new MemoryCollection(),
+  paymentRequests: new MemoryCollection(),
+  mandates: new MemoryCollection(),
+  mandateAttempts: new MemoryCollection(),
+  auditLog: new MemoryCollection(),
+  idempotencyKeys: new MemoryCollection(),
+  gatekeeperRejections: new MemoryCollection(),
 };
 
 vi.mock("./models", async (importOriginal) => {
@@ -27,6 +35,14 @@ vi.mock("./models", async (importOriginal) => {
     holdingsCollection: () => cols.holdings,
     invTxnsCollection: () => cols.investmentTxns,
     settingsCollection: () => cols.userSettings,
+    eventsCollection: () => cols.integrationEvents,
+    connectionsCollection: () => cols.integrationConnections,
+    paymentRequestsCollection: () => cols.paymentRequests,
+    mandatesCollection: () => cols.mandates,
+    attemptsCollection: () => cols.mandateAttempts,
+    auditCollection: () => cols.auditLog,
+    idempotencyCollection: () => cols.idempotencyKeys,
+    rejectionsCollection: () => cols.gatekeeperRejections,
   };
 });
 
@@ -143,9 +159,17 @@ describe("User A cannot touch User B's records", () => {
   });
 
   it("deleting A's account data leaves B's untouched", async () => {
+    for (const c of [cols.integrationEvents, cols.paymentRequests, cols.mandates, cols.auditLog]) {
+      await c.insertOne({ userId: A });
+      await c.insertOne({ userId: B });
+    }
     const before = snapshot();
     await deleteAllUserData(A);
     expect(cols.transactions.docs.filter((d) => d.userId === A)).toHaveLength(0);
+    for (const c of [cols.integrationEvents, cols.paymentRequests, cols.mandates, cols.auditLog]) {
+      expect(c.docs.filter((d) => d.userId === A)).toHaveLength(0);
+      expect(c.docs.filter((d) => d.userId === B)).toHaveLength(1);
+    }
     expect(snapshot()).toBe(before);
     await expect(deleteAllUserData("")).rejects.toThrow();
   });

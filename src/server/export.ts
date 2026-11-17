@@ -8,6 +8,8 @@ import { formatScaled, PRICE_DP, QTY_DP } from "@/lib/decimal";
 import { FREQUENCY_LABEL } from "@/lib/types";
 import { getSettings, listGoals, listLoans } from "./finance-repo";
 import { listHoldings, listInvTxns } from "./investments-repo";
+import { listMandates, listPaymentRequests, toEventRow } from "./integrations/queries";
+import { attemptsCollection, eventsCollection } from "./models";
 import { loadUserData } from "./repository";
 
 const rupees = (paise: number | null) => (paise === null ? null : (paise / 100).toFixed(2));
@@ -87,13 +89,17 @@ export async function exportInvestmentsCsv(userId: string): Promise<string> {
 
 /** Everything, as structured JSON (amounts in paise, as stored). */
 export async function exportAllJson(userId: string, account: { name: string; email: string }): Promise<string> {
-  const [{ transactions, settlements }, goals, loans, holdings, investmentTxns, settings] = await Promise.all([
+  const [{ transactions, settlements }, goals, loans, holdings, investmentTxns, settings, events, paymentRequests, mandates, attempts] = await Promise.all([
     loadUserData(userId, { includeArchived: true }),
     listGoals(userId, { includeArchived: true }),
     listLoans(userId),
     listHoldings(userId, { includeArchived: true }),
     listInvTxns(userId),
     getSettings(userId),
+    eventsCollection().find({ userId }, { projection: { rawBody: 0 } }).sort({ receivedAt: -1 }).limit(5000).toArray(),
+    listPaymentRequests(userId, undefined, 5000),
+    listMandates(userId),
+    attemptsCollection().find({ userId }, { projection: { userId: 0 } }).limit(5000).toArray(),
   ]);
   return JSON.stringify(
     {
@@ -107,6 +113,13 @@ export async function exportAllJson(userId: string, account: { name: string; ema
       loans,
       holdings,
       investmentTransactions: investmentTxns,
+      integrations: {
+        note: "Simulated provider data from the Integrations Hub.",
+        events: events.map(toEventRow),
+        paymentRequests,
+        mandates,
+        mandateAttempts: attempts,
+      },
     },
     null,
     2,

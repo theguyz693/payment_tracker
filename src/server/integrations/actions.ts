@@ -45,7 +45,7 @@ function toSimState(r: DeliveryResult, okMessage: string): SimState {
     : event.status === "PROCESSED"
       ? `${okMessage} ${event.outcome?.message ?? ""}`.trim()
       : event.status === "RETRY_PENDING"
-        ? `Processing failed (${event.lastError?.message ?? "transient error"}). A retry is scheduled.`
+        ? `Processing failed: ${(event.lastError?.message ?? "transient error").replace(/\.$/, "")}. A retry is scheduled.`
         : event.status === "FAILED"
           ? `Event rejected by business rules: ${event.lastError?.message ?? "failed"}.`
           : `Event is ${event.status.toLowerCase()}.`;
@@ -243,14 +243,26 @@ export async function runMandateAttemptAction(_prev: SimState, formData: FormDat
     const mandate = await mandatesCollection().findOne({ _id: new ObjectId(id), userId: g.user.id });
     if (!mandate) return { message: "That mandate no longer exists." };
     const conn = await requireConnection(g.user.id, "autopay_sim");
-    const tx = await getTransactionDoc(g.user.id, mandate.transactionId);
-    if (!tx || tx.status !== "PENDING") return { message: "This mandate has no occurrence left to debit." };
-    const attempts = await attemptsCollection().find({ userId: g.user.id, mandateId: mandate._id, dueDate: tx.dueDate }).toArray();
-    // "Repeat" re-sends the last attempt's identity, to show duplicate protection.
-    const last = attempts.reduce((m, a) => Math.max(m, a.attemptNo), 0);
-    const next = nextAttempt(attempts);
-    const attemptNo = repeat ? Math.max(last, 1) : next.ok ? next.attemptNo : last + 1;
-    const payload = buildMandateDebit(conn.accountRef, { mandateId: id, dueDate: tx.dueDate, attemptNo, amountPaise: mandate.amountPaise, result: outcome }, { failFirstAttempts: Number(get("failFirstAttempts")) || 0 });
+    let payload;
+    if (repeat) {
+      // Re-deliver the most recent attempt exactly as the provider sent it: same
+      // identity and contents, so the pipeline must treat it as a duplicate.
+      const last = await attemptsCollection().find({ userId: g.user.id, mandateId: mandate._id }).sort({ createdAt: -1 }).limit(1).next();
+      if (!last) return { message: "There's no previous attempt to re-send yet." };
+      const ev = await eventsCollection().findOne({ _id: last.eventId, userId: g.user.id }, { projection: { rawBody: 1, provider: 1 } });
+      if (!ev) return { message: "The previous attempt's event is no longer available." };
+      const r = await deliverBody("autopay_sim", ev.rawBody, { userId: g.user.id, today: await getToday(), requestId: g.requestId });
+      finish(g, r.kind === "accepted" ? (r.duplicate ? "duplicate" : r.event.status) : r.reason);
+      refresh();
+      return toSimState(r, "Debit attempt processed.");
+    } else {
+      const tx = await getTransactionDoc(g.user.id, mandate.transactionId);
+      if (!tx || tx.status !== "PENDING") return { message: "This mandate has no occurrence left to debit." };
+      const attempts = await attemptsCollection().find({ userId: g.user.id, mandateId: mandate._id, dueDate: tx.dueDate }).toArray();
+      const next = nextAttempt(attempts);
+      const attemptNo = next.ok ? next.attemptNo : attempts.reduce((m, a) => Math.max(m, a.attemptNo), 0) + 1;
+      payload = buildMandateDebit(conn.accountRef, { mandateId: id, dueDate: tx.dueDate, attemptNo, amountPaise: mandate.amountPaise, result: outcome }, { failFirstAttempts: Number(get("failFirstAttempts")) || 0 });
+    }
     const r = await deliver("autopay_sim", payload, { userId: g.user.id, today: await getToday(), requestId: g.requestId });
     finish(g, r.kind === "accepted" ? r.event.status : r.reason);
     refresh();

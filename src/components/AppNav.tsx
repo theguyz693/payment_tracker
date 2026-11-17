@@ -13,6 +13,7 @@ import {
   ListIcon,
   Menu,
   PieChart,
+  Plug,
   Plus,
   ReceiptIcon,
   Target,
@@ -37,6 +38,7 @@ const INSIGHT: NavItem[] = [
   { href: "/summary", label: "Monthly report", Icon: BarChart },
   { href: "/receipts", label: "Receipts", Icon: ReceiptIcon },
 ];
+const CONNECT: NavItem[] = [{ href: "/integrations", label: "Integrations Hub", Icon: Plug }];
 const SETTINGS: NavItem = { href: "/settings", label: "Settings", Icon: Gear };
 
 function useIsActive() {
@@ -75,6 +77,7 @@ function NavGroups({ onNavigate }: { onNavigate?: () => void }) {
     [null, PRIMARY],
     ["Plan", PLANNING],
     ["Understand", INSIGHT],
+    ["Connect", CONNECT],
   ];
   return (
     <div className="space-y-5">
