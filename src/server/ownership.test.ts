@@ -19,6 +19,8 @@ vi.mock("./models", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./models")>();
   return {
     ...actual,
+    // No multi-document transactions in the fakes: run the callback directly.
+    runInTransaction: <T,>(fn: (session: undefined) => Promise<T>) => fn(undefined),
     transactionsCollection: () => cols.transactions,
     goalsCollection: () => cols.goals,
     loansCollection: () => cols.loans,

@@ -109,6 +109,7 @@ export class MemoryCollection {
     if (!d) return { matchedCount: 0, modifiedCount: 0 };
     for (const [k, v] of Object.entries((update.$set as Doc) ?? {})) setPath(d, k, v);
     for (const [k, v] of Object.entries((update.$push as Doc) ?? {})) ((d[k] ??= []) as unknown[]).push(v);
+    for (const [k, v] of Object.entries((update.$inc as Doc) ?? {})) d[k] = ((d[k] as number | undefined) ?? 0) + (v as number);
     return { matchedCount: 1, modifiedCount: 1 };
   }
   async updateMany(filter: Doc, update: Doc) {

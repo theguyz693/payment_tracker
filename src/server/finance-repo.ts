@@ -6,7 +6,7 @@
 // single atomic $push guarded by requestId, so a retried submit is a no-op.
 
 import "server-only";
-import { ObjectId } from "mongodb";
+import { ObjectId, type ClientSession } from "mongodb";
 import type { Goal, GoalPlan, GoalPriority } from "@/lib/goals";
 import type { ISODate } from "@/lib/types";
 import { goalsCollection, isDuplicateKey, loansCollection, settingsCollection, transactionsCollection, type GoalDoc, type LoanDoc } from "./models";
@@ -249,8 +249,16 @@ export interface LoanInput {
   paidBeforeTracking: number;
 }
 
-export async function createLoan(userId: string, input: LoanInput, requestId: string): Promise<{ id: string; created: boolean }> {
+export async function createLoan(
+  userId: string,
+  input: LoanInput,
+  requestId: string,
+  session?: ClientSession,
+): Promise<{ id: string; created: boolean; transactionId: string | null }> {
   const now = new Date();
+  // Inside a transaction a duplicate-key error would abort it: look first.
+  const prior = await loansCollection().findOne({ userId, requestId }, { session });
+  if (prior) return { id: prior._id.toHexString(), created: false, transactionId: prior.transactionId?.toHexString() ?? null };
   try {
     const res = await loansCollection().insertOne({
       ...input,
@@ -261,12 +269,12 @@ export async function createLoan(userId: string, input: LoanInput, requestId: st
       requestId,
       createdAt: now,
       updatedAt: now,
-    } as unknown as LoanDoc);
-    return { id: res.insertedId.toHexString(), created: true };
+    } as unknown as LoanDoc, { session });
+    return { id: res.insertedId.toHexString(), created: true, transactionId: null };
   } catch (e) {
-    if (isDuplicateKey(e)) {
+    if (!session && isDuplicateKey(e)) {
       const existing = await loansCollection().findOne({ userId, requestId });
-      if (existing) return { id: existing._id.toHexString(), created: false };
+      if (existing) return { id: existing._id.toHexString(), created: false, transactionId: existing.transactionId?.toHexString() ?? null };
     }
     throw e;
   }
@@ -283,21 +291,22 @@ export async function updateLoan(userId: string, id: string, input: LoanInput): 
  * Link a loan to its recurring EMI item (both directions). Refuses an item
  * already linked to another loan, so one EMI can't be counted twice.
  */
-export async function linkLoanTransaction(userId: string, loanId: string, transactionId: string): Promise<void> {
+export async function linkLoanTransaction(userId: string, loanId: string, transactionId: string, session?: ClientSession): Promise<void> {
   const lid = toObjectId(loanId);
   const tid = toObjectId(transactionId);
   if (!lid || !tid) throw new UserError("That item couldn't be linked.");
-  const tx = await transactionsCollection().findOne({ _id: tid, userId, archivedAt: null, direction: "PAY" });
+  const tx = await transactionsCollection().findOne({ _id: tid, userId, archivedAt: null, direction: "PAY" }, { session });
   if (!tx) throw new UserError("Pick an active payment to link.");
   if (tx.loanId && !tx.loanId.equals(lid)) throw new UserError("That payment already tracks another loan.");
   const res = await transactionsCollection().updateOne(
     { _id: tid, userId, $or: [{ loanId: null }, { loanId: lid }] },
     { $set: { loanId: lid, updatedAt: new Date() } },
+    { session },
   );
   if (res.matchedCount !== 1) throw new UserError("That payment already tracks another loan.");
   // Unlink any previously linked item, then point the loan at the new one.
-  await transactionsCollection().updateMany({ userId, loanId: lid, _id: { $ne: tid } }, { $set: { loanId: null, updatedAt: new Date() } });
-  await loansCollection().updateOne({ _id: lid, userId }, { $set: { transactionId: tid, updatedAt: new Date() } });
+  await transactionsCollection().updateMany({ userId, loanId: lid, _id: { $ne: tid } }, { $set: { loanId: null, updatedAt: new Date() } }, { session });
+  await loansCollection().updateOne({ _id: lid, userId }, { $set: { transactionId: tid, updatedAt: new Date() } }, { session });
 }
 
 export async function addPrepayment(

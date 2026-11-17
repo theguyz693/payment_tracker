@@ -3,6 +3,8 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { EXPORT_KINDS, exportAllJson, exportGoalsCsv, exportInvestmentsCsv, exportItemsCsv, exportLoansCsv, type ExportKind } from "@/server/export";
+import { RateLimitError } from "@/server/errors";
+import { enforce } from "@/server/ratelimit";
 import { getSessionUser, getToday } from "@/server/session";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +12,12 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ kind: string }> }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  try {
+    await enforce("export", user.id, { userId: user.id, route: "export" });
+  } catch (e) {
+    if (e instanceof RateLimitError) return NextResponse.json({ error: e.message }, { status: 429, headers: { "Retry-After": String(e.retryAfterSec) } });
+    throw e;
+  }
   const { kind } = await params;
   if (!(EXPORT_KINDS as readonly string[]).includes(kind)) return NextResponse.json({ error: "Unknown export" }, { status: 404 });
 

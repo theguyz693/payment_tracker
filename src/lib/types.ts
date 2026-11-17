@@ -45,6 +45,10 @@ export interface Transaction {
   amountChanges: AmountChange[];
   /** Loan whose EMI this item tracks (see Loans). */
   loanId: string | null;
+  /** Optimistic-concurrency token (last update time). A stale edit is refused. */
+  version?: string;
+  /** Set when the item was created by an integration event, a payment request or a mandate. */
+  source?: { kind: "integration" | "payment_request" | "mandate"; ref: string; provider?: string } | null;
 }
 
 export interface AmountChange {

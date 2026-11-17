@@ -20,6 +20,12 @@ vi.mock("./session", () => ({
   getToday: vi.fn(async () => "2026-10-28"),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// The GateKeeper limiter and the idempotency store need a real database; they
+// have their own integration tests. Here they let every call through.
+vi.mock("./ratelimit", () => ({ enforce: vi.fn(async () => {}), recordRejection: vi.fn(async () => {}) }));
+vi.mock("./idempotency", () => ({
+  withIdempotency: vi.fn(async (_opts: unknown, op: (s: undefined) => Promise<unknown>) => ({ result: await op(undefined), replayed: false })),
+}));
 
 const repoCalls: { fn: string; userId: unknown }[] = [];
 const record = (fn: string) =>

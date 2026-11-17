@@ -1,7 +1,7 @@
 "use server";
 
 // Server actions for the investment tracker.
-// Same contract as actions.ts: requireUser() first, validate, user-scoped repo.
+// Same contract as actions.ts: gate() first (session + rate limit), validate, user-scoped repo.
 
 import { revalidatePath } from "next/cache";
 import { formatDate } from "@/lib/dates";
@@ -13,16 +13,20 @@ import { formGetter, GENERIC_ERROR, requestIdFrom, toFieldErrors, type FormState
 import * as inv from "./investments-repo";
 import { searchAmfi, type AmfiScheme } from "./prices";
 import { UserError } from "./repository";
-import { getToday, requireUser } from "./session";
+import { gate } from "./guard";
+import { logError } from "./log";
+import { getToday } from "./session";
 
 function fail(e: unknown, where: string): FormState {
+  logError(where, e);
   if (e instanceof UserError) return { message: e.message };
-  console.error(`[${where}]`, e);
   return { message: GENERIC_ERROR };
 }
 
 export async function saveHoldingAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser();
+  const g = await gate("saveHoldingAction", "finance.write");
+  if (g.blocked) return { message: g.blocked };
+  const user = g.user;
   const get = formGetter(formData);
   const parsed = holdingSchema.safeParse({
     type: get("type"),
@@ -78,7 +82,9 @@ export async function saveHoldingAction(_prev: FormState, formData: FormData): P
 }
 
 export async function invTxnAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser();
+  const g = await gate("invTxnAction", "finance.write");
+  if (g.blocked) return { message: g.blocked };
+  const user = g.user;
   const get = formGetter(formData);
   const parsed = invTxnSchema.safeParse({
     type: get("type"),
@@ -126,7 +132,9 @@ export async function invTxnAction(_prev: FormState, formData: FormData): Promis
 }
 
 export async function manualPriceAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser();
+  const g = await gate("manualPriceAction", "finance.write");
+  if (g.blocked) return { message: g.blocked };
+  const user = g.user;
   const get = formGetter(formData);
   const parsed = manualPriceSchema.safeParse({ price: get("price"), asOf: get("asOf") });
   if (!parsed.success) return { errors: toFieldErrors(parsed.error) };
@@ -143,33 +151,39 @@ export async function manualPriceAction(_prev: FormState, formData: FormData): P
 }
 
 export async function sipStatusAction(id: unknown, status: unknown): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireUser();
+  const g = await gate("sipStatusAction", "finance.write");
+  if (g.blocked) return { ok: false, message: g.blocked };
+  const user = g.user;
   if (typeof id !== "string" || (status !== "ACTIVE" && status !== "PAUSED" && status !== "STOPPED")) return { ok: false };
   try {
     const ok = await inv.setSipStatus(user.id, id, status);
     revalidatePath("/", "layout");
     return { ok, message: { ACTIVE: "SIP resumed.", PAUSED: "SIP paused.", STOPPED: "SIP marked as stopped." }[status] };
   } catch (e) {
-    console.error("[sipStatus]", e);
+    logError("sipStatus", e, { userId: user.id });
     return { ok: false };
   }
 }
 
 export async function archiveHoldingAction(id: unknown): Promise<{ ok: boolean }> {
-  const user = await requireUser();
+  const g = await gate("archiveHoldingAction", "finance.write");
+  if (g.blocked) return { ok: false };
+  const user = g.user;
   if (typeof id !== "string") return { ok: false };
   try {
     const ok = await inv.setHoldingArchived(user.id, id, true);
     revalidatePath("/", "layout");
     return { ok };
   } catch (e) {
-    console.error("[archiveHolding]", e);
+    logError("archiveHolding", e, { userId: user.id });
     return { ok: false };
   }
 }
 
 export async function deleteInvTxnAction(id: unknown): Promise<{ ok: boolean; message?: string }> {
-  const user = await requireUser();
+  const g = await gate("deleteInvTxnAction", "finance.write");
+  if (g.blocked) return { ok: false, message: g.blocked };
+  const user = g.user;
   if (typeof id !== "string") return { ok: false };
   try {
     const ok = await inv.deleteInvTxn(user.id, id);
@@ -177,14 +191,15 @@ export async function deleteInvTxnAction(id: unknown): Promise<{ ok: boolean; me
     return { ok, message: ok ? "Transaction removed." : "That transaction no longer exists." };
   } catch (e) {
     if (e instanceof UserError) return { ok: false, message: e.message };
-    console.error("[deleteInvTxn]", e);
+    logError("deleteInvTxn", e, { userId: user.id });
     return { ok: false };
   }
 }
 
 /** AMFI scheme search for the add-fund form. Null when AMFI can't be reached. */
 export async function searchSchemesAction(query: unknown): Promise<AmfiScheme[] | null> {
-  await requireUser();
+  const g = await gate("searchSchemesAction", "search");
+  if (g.blocked) return null;
   if (typeof query !== "string" || query.length > 80) return [];
   return searchAmfi(query, 15);
 }

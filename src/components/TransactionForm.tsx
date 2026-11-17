@@ -8,6 +8,7 @@ import { paiseToInput } from "@/lib/money";
 import { describeRecurrence, isRecurring } from "@/lib/recurrence";
 import { FREQUENCIES, FREQUENCY_LABEL, type Category, type Direction, type Frequency, type Transaction } from "@/lib/types";
 import { saveTransaction, type FormState } from "@/server/actions";
+import { RequestIdField } from "./forms";
 import { ArrowIn, ArrowOut, Repeat } from "./icons";
 import { useToast } from "./Toast";
 
@@ -62,6 +63,9 @@ export function TransactionForm({ categories, today, initial, defaultDirection, 
   return (
     <form action={formAction} className="space-y-6" noValidate>
       {initial && <input type="hidden" name="id" value={initial.id} />}
+      {initial?.version && <input type="hidden" name="version" value={initial.version} />}
+      {/* One idempotency key per new item, kept across retries of the same submission. */}
+      {!initial && <RequestIdField />}
       {returnTo && <input type="hidden" name="returnTo" value={returnTo} />}
       {direction && <input type="hidden" name="direction" value={direction} />}
       <input type="hidden" name="frequency" value={f.frequency} />

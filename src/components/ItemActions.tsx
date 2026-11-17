@@ -64,6 +64,13 @@ export function RowShell({
         toast(res?.message ?? "Couldn't reach the server. Check your connection.", { tone: "error" });
         return;
       }
+      if (res.outcome === "already_settled") {
+        // Another tab or device got there first: show the current state, no celebration.
+        setPhase("idle");
+        toast(res.message);
+        refresh();
+        return;
+      }
       setPhase("success");
       toast(res.message);
       await sleep(650);
